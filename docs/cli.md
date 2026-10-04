@@ -42,6 +42,9 @@ my_shop/
 
 ## `nexus create <name>`
 
+`npm create nexus-ui <name>` runs this command from the newest release, with nothing installed
+beforehand.
+
 Copies the resource template into a new folder `<name>` and fills in the name. The name may use
 letters, digits, `_` and `-`, and starts with a letter. The folder must not exist yet, or be
 empty.

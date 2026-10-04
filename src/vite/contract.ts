@@ -45,7 +45,7 @@ export async function writeContractTypes(web: string, paths: PackagePaths): Prom
       root: web,
       configFile: false,
       logLevel: 'silent',
-      resolve: { alias: { 'nexus/contract': paths.contract, 'nexus-ui/contract': paths.contract } },
+      resolve: { alias: { 'nexus/contract': paths.contract, '@nexusstudios/ui/contract': paths.contract } },
     });
     if (!tools.isContract(module.default)) return 'contract.ts has no contract as its default export.';
 

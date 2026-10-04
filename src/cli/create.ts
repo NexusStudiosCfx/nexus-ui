@@ -48,14 +48,12 @@ export function create(argv: readonly string[], cwd: string): void {
   const root = packageRoot();
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     version: string;
-    homepage: string;
     dependencies?: Record<string, string>;
   };
   copy(join(root, 'templates', 'resource'), target, {
     name,
-    // The package is released on GitHub, not on the npm registry, so the resource depends on
-    // the file attached to the release of this version. npm installs it like any other package.
-    package: `${manifest.homepage}/releases/download/v${manifest.version}/nexus-ui-${manifest.version}.tgz`,
+    // The version that created the resource and later ones that are compatible with it.
+    package: `^${manifest.version}`,
     vite: manifest.dependencies?.vite ?? 'latest',
   });
 

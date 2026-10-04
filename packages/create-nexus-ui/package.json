@@ -1,0 +1,34 @@
+{
+  "name": "create-nexus-ui",
+  "version": "1.0.1",
+  "description": "Start a FiveM resource with Nexus UI: npm create nexus-ui my_shop",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "create-nexus-ui": "./index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NexusStudiosCfx/nexus-ui.git",
+    "directory": "packages/create-nexus-ui"
+  },
+  "homepage": "https://github.com/NexusStudiosCfx/nexus-ui",
+  "bugs": {
+    "url": "https://github.com/NexusStudiosCfx/nexus-ui/issues"
+  },
+  "keywords": [
+    "fivem",
+    "nui",
+    "cfx",
+    "nexus-ui"
+  ],
+  "dependencies": {
+    "@nexusstudios/ui": "*"
+  }
+}

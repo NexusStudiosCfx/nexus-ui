@@ -8,7 +8,7 @@ import MagicString, { type SourceMap } from 'magic-string';
 import { parseSync } from 'vite';
 import { removeStatementAt, type Node } from './erase';
 
-const RUNTIME = new Set(['nexus', 'nexus-ui']);
+const RUNTIME = new Set(['nexus', '@nexusstudios/ui']);
 
 /** The names under which a module imported `dev`, and the names of namespace imports of the runtime. */
 export interface DevNames {

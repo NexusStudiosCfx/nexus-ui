@@ -13,16 +13,16 @@ export interface Project {
   name: string;
 }
 
-/** The folder of the installed nexus-ui package, which holds `lua/` and `templates/`. */
+/** The folder of the installed package, which holds `lua/` and `templates/`. */
 export function packageRoot(): string {
   let folder = dirname(fileURLToPath(import.meta.url));
   for (;;) {
     const manifest = join(folder, 'package.json');
-    if (existsSync(manifest) && (JSON.parse(readFileSync(manifest, 'utf8')) as { name?: string }).name === 'nexus-ui') {
+    if (existsSync(manifest) && (JSON.parse(readFileSync(manifest, 'utf8')) as { name?: string }).name === '@nexusstudios/ui') {
       return folder;
     }
     const parent = dirname(folder);
-    if (parent === folder) throw new Error('The nexus-ui package folder could not be found from ' + import.meta.url);
+    if (parent === folder) throw new Error('The folder of @nexusstudios/ui could not be found from ' + import.meta.url);
     folder = parent;
   }
 }
@@ -88,7 +88,7 @@ export async function loadContract(project: Project): Promise<Contract> {
     const result = await runnerImport<{ default?: unknown }>(pathToFileURL(file).href, {
       root: project.root,
       logLevel: 'silent',
-      resolve: { alias: { 'nexus/contract': entry, 'nexus-ui/contract': entry } },
+      resolve: { alias: { 'nexus/contract': entry, '@nexusstudios/ui/contract': entry } },
     });
     loaded = result.module;
   } catch (error) {

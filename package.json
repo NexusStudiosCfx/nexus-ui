@@ -1,6 +1,6 @@
 {
-  "name": "nexus-ui",
-  "version": "0.2.1",
+  "name": "@nexusstudios/ui",
+  "version": "0.2.2",
   "description": "A UI framework for FiveM: .nexus components, a typed bridge to Lua, and screens that cost nothing while closed.",
   "license": "MIT",
   "repository": {
@@ -34,7 +34,8 @@
     "./contract": {
       "types": "./dist/contract/index.d.ts",
       "default": "./dist/contract/index.js"
-    }
+    },
+    "./cli": "./dist/cli/index.js"
   },
   "files": [
     "dist",

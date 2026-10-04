@@ -185,7 +185,7 @@ server_scripts { 'nexus/server.lua', 'server/main.lua' }
 The generators are also available from code:
 
 ```ts
-import { generate } from 'nexus-ui/contract';
+import { generate } from '@nexusstudios/ui/contract';
 
 const { types, lua } = generate(contract);
 ```

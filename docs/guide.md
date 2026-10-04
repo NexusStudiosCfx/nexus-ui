@@ -34,16 +34,14 @@ Contents:
 ## 2. Create a resource
 
 ```
-npx --package https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.1/nexus-ui-0.2.1.tgz nexus create my_shop
+npm create nexus-ui my_shop
 cd my_shop
 npm install
 ```
 
-The package is released on GitHub, as a file attached to each
-[release](https://github.com/NexusStudiosCfx/nexus-ui/releases). The first line runs `nexus create`
-from that file, and the new resource depends on the same file, so `npm install` needs nothing
-else. The package is not on the npm registry: do not install `nexus-ui` by name. To work from a
-downloaded file or a clone instead, see
+`npm create nexus-ui` runs `nexus create` from the newest release on npm, and the new resource
+depends on `@nexusstudios/ui` by version, so `npm update` brings later fixes. To work without the
+registry, from a downloaded file or a clone, see
 [Installing from a release file](#13-installing-from-a-release-file-or-a-clone).
 
 The folder is a complete FiveM resource:
@@ -462,21 +460,17 @@ something, so it can run in CI. See [`nexus check`](cli.md#nexus-check).
 
 ## 13. Installing from a release file, or a clone
 
-Every release on GitHub has the package attached as one file, `nexus-ui-<version>.tgz`, and a
-resource made by `nexus create` depends on its address. To move a resource to a newer version,
-change the version in that address in `package.json` (it appears twice) and run
-`npm install`.
-
-The file also works from disk, for a machine without access to GitHub or a build of your own.
-Download it, then:
+Every release on GitHub has the package attached as one file, `nexusstudios-ui-<version>.tgz`: the same
+file npm serves. It is there for a machine without access to the registry, and for a build of
+your own. Download it, then:
 
 ```
-npx --package ./nexus-ui-0.2.1.tgz nexus create my_shop
+npx --package ./nexusstudios-ui-0.2.2.tgz nexus create my_shop
 cd my_shop
-npm install --save-dev ../nexus-ui-0.2.1.tgz
+npm install --save-dev ../nexusstudios-ui-0.2.2.tgz
 ```
 
-The last line installs everything the resource needs and points its `nexus-ui` dependency at the
+The last line installs everything the resource needs and points its `@nexusstudios/ui` dependency at the
 file, so keep the file where it is, or give the path of wherever you keep it.
 
 From a clone, build that same file yourself:
@@ -489,7 +483,7 @@ npm run build
 npm pack --pack-destination releases
 ```
 
-and install `releases/nexus-ui-<version>.tgz` as above.
+and install `releases/nexusstudios-ui-<version>.tgz` as above.
 
 Install the packed file, not the folder of the clone. npm links a folder instead of copying it,
 so `npm install ../nexus-ui` or `npm link` puts the whole repository, its examples and their
@@ -501,7 +495,7 @@ environment variable `NEXUS_CHROMIUM_103` holds the path of its executable.
 
 The example resource is in `examples/garage`: a garage menu with a list, a search, a purchase
 that the server validates and can refuse, a vehicle HUD, and the same garage as an app in LB
-Phone. It depends on the released file like any other resource:
+Phone. It depends on the package from npm like any other resource:
 
 ```
 cd examples/garage
@@ -512,7 +506,7 @@ npm run build
 To build it against the file you packed from the clone instead, install that over it:
 
 ```
-npm install --no-save ../../releases/nexus-ui-0.2.1.tgz
+npm install --no-save ../../releases/nexusstudios-ui-0.2.2.tgz
 ```
 
 ## 14. When something goes wrong

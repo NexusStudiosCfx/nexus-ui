@@ -104,10 +104,23 @@ describe('the nexus command line', { timeout: 120000 }, () => {
       const manifest = JSON.parse(read('my_shop', 'package.json')) as { name: string; devDependencies: Record<string, string> };
       const version = (JSON.parse(readFileSync(join(REPO, 'package.json'), 'utf8')) as { version: string }).version;
       expect(manifest.name).toBe('my_shop');
-      expect(manifest.devDependencies['nexus-ui']).toBe(
-        `https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v${version}/nexus-ui-${version}.tgz`,
-      );
+      expect(manifest.devDependencies['@nexusstudios/ui']).toBe(`^${version}`);
       install('my_shop');
+    });
+
+    it('is what npm create nexus-ui runs', () => {
+      // The initializer package is one file that hands over to `nexus create`.
+      mkdirSync(workPath('initializer'), { recursive: true });
+      writeFileSync(workPath('initializer', 'index.js'), readFileSync(join(REPO, 'packages/create-nexus-ui/index.js'), 'utf8'));
+      writeFileSync(workPath('initializer', 'package.json'), '{ "type": "module" }');
+      install('initializer');
+      const result = spawnSync(process.execPath, [workPath('initializer', 'index.js'), 'made_by_create'], {
+        cwd: workPath('.'),
+        encoding: 'utf8',
+        env: { ...process.env, NO_COLOR: '1' },
+      });
+      expect(`${result.stdout}${result.stderr}`).toContain('ok Created made_by_create');
+      expect(existsSync(workPath('made_by_create', 'fxmanifest.lua'))).toBe(true);
     });
 
     it('does not write into a folder that already has files', () => {

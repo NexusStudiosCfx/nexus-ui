@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2
+
+- **The package is on npm, as `@nexusstudios/ui`.** `npm create nexus-ui my_shop` starts a resource,
+  and `npm install --save-dev @nexusstudios/ui` adds the package to one that exists.
+- **A new resource depends on `@nexusstudios/ui` by version** (`^0.2.2`), not on the address of a
+  release file. To move an existing resource over: remove `nexus-ui` from its `package.json`,
+  run `npm install --save-dev @nexusstudios/ui`, and change `nexus-ui` to `@nexusstudios/ui` in
+  `vite.config.ts` and in the two `paths` of `tsconfig.json`. Imports from `nexus` and
+  `nexus/contract` stay as they are.
+- The release file is still attached to every GitHub release, for work without the registry.
+
 ## 0.2.1
 
 Fixes found by the first resources that built phone and tablet apps on 0.2.0.

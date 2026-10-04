@@ -78,8 +78,6 @@ code: a feature is either in and documented, or it is on this page.
 
 ## The command line
 
-- **The package is not on the npm registry.** It is installed from the file attached to a
-  GitHub release, and a resource is moved to a newer version by changing that address.
 - One template for `nexus create`.
 - `nexus build` has no watch mode. `nexus dev --game` is the way to iterate in game.
 

@@ -90,7 +90,7 @@ Nexus UI takes those on as the framework's job.
 ## Start
 
 ```
-npx --package https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.1/nexus-ui-0.2.1.tgz nexus create my_shop
+npm create nexus-ui my_shop
 cd my_shop
 npm install
 npm run dev
@@ -99,9 +99,8 @@ npm run dev
 `npm run dev` opens the UI in a browser. `npm run build` writes the page and the Lua bridge,
 after which `ensure my_shop` starts the resource and `/my_shop` opens its screen.
 
-The package is released on GitHub: every [release](https://github.com/NexusStudiosCfx/nexus-ui/releases)
-has it attached as `nexus-ui-<version>.tgz`, and a new resource depends on that file. It is not
-on the npm registry, so do not install `nexus-ui` by name.
+The package is [`@nexusstudios/ui`](https://www.npmjs.com/package/@nexusstudios/ui) on npm. To add it to a
+resource that exists already: `npm install --save-dev @nexusstudios/ui`.
 
 Requirements: Node.js 20 or newer, and `lua54 'yes'` in the resource.
 

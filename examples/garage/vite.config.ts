@@ -1,3 +1,3 @@
-import nexus from 'nexus-ui/vite';
+import nexus from '@nexusstudios/ui/vite';
 
 export default { plugins: [nexus()] };

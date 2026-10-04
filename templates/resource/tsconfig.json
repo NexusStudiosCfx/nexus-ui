@@ -11,8 +11,8 @@
     "isolatedModules": true,
     "erasableSyntaxOnly": true,
     "paths": {
-      "nexus": ["./node_modules/nexus-ui/dist/runtime/index.d.ts"],
-      "nexus/contract": ["./node_modules/nexus-ui/dist/contract/index.d.ts"]
+      "nexus": ["./node_modules/@nexusstudios/ui/dist/runtime/index.d.ts"],
+      "nexus/contract": ["./node_modules/@nexusstudios/ui/dist/contract/index.d.ts"]
     }
   },
   "include": ["web"]

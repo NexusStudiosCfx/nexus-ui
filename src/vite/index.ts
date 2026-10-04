@@ -31,7 +31,7 @@ interface Compiled {
  *
  * @example
  * // vite.config.ts, next to fxmanifest.lua
- * import nexus from 'nexus-ui/vite';
+ * import nexus from '@nexusstudios/ui/vite';
  *
  * export default { plugins: [nexus()] };
  */
@@ -91,7 +91,7 @@ export default function nexus(options: NexusOptions = {}): Plugin {
           modulePreload: { polyfill: false },
         },
         // A pre-bundled copy would be a second runtime next to the one `nexus` resolves to.
-        optimizeDeps: { exclude: ['nexus-ui'] },
+        optimizeDeps: { exclude: ['@nexusstudios/ui'] },
       };
     },
 
@@ -134,11 +134,11 @@ export default function nexus(options: NexusOptions = {}): Plugin {
     async resolveId(id, importer) {
       if (id === ENTRY || id === ENTRY_URL) return ENTRY_ID;
 
-      if (id === 'nexus' || id === 'nexus/contract' || (paths.fromSource && (id === 'nexus-ui' || id === 'nexus-ui/contract'))) {
+      if (id === 'nexus' || id === 'nexus/contract' || (paths.fromSource && (id === '@nexusstudios/ui' || id === '@nexusstudios/ui/contract'))) {
         const contract = id.endsWith('/contract');
         if (!paths.fromSource) {
           // The same resolution as a direct import of the package, so there is one copy of it.
-          const found = await this.resolve(contract ? 'nexus-ui/contract' : 'nexus-ui', importer, { skipSelf: true });
+          const found = await this.resolve(contract ? '@nexusstudios/ui/contract' : '@nexusstudios/ui', importer, { skipSelf: true });
           if (found) return found;
         }
         return contract ? paths.contract : paths.runtime;

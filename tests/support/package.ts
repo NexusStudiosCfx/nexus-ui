@@ -66,11 +66,11 @@ export function read(...parts: string[]): string {
   return readFileSync(workPath(...parts), 'utf8');
 }
 
-/** Makes `nexus-ui` resolve to the package under test from inside a project, as an install would. */
+/** Makes the package resolve to the build under test from inside a project, as an install would. */
 export function install(project: string): void {
-  const modules = workPath(project, 'node_modules');
-  mkdirSync(modules, { recursive: true });
-  if (!existsSync(join(modules, 'nexus-ui'))) symlinkSync(PACKAGE, join(modules, 'nexus-ui'), 'junction');
+  const scope = workPath(project, 'node_modules', '@nexusstudios');
+  mkdirSync(scope, { recursive: true });
+  if (!existsSync(join(scope, 'ui'))) symlinkSync(PACKAGE, join(scope, 'ui'), 'junction');
 }
 
 /** Copies a folder of the repository (an example, a fixture) into the work folder and installs the package in it. */
