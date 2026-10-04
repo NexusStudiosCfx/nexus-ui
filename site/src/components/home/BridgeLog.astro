@@ -1,0 +1,82 @@
+---
+/** Lines of the bridge log of `nexus dev`, set as the log sets them. */
+interface Line {
+  kind: 'call' | 'state' | 'client' | 'push';
+  name: string;
+  data: string;
+  /** How often the line repeated, as the log counts it. */
+  count?: string;
+  result?: string;
+  ok?: boolean;
+}
+
+interface Props {
+  lines: Line[];
+  caption: string;
+}
+
+const { lines, caption } = Astro.props;
+---
+
+<figure class="code log">
+  <figcaption class="code-bar">
+    <span class="code-file">{caption}</span>
+    <span class="code-note">nexus dev</span>
+  </figcaption>
+  <div class="log-body" tabindex="0" role="group" aria-label={caption}>
+    {
+      lines.map((line) => (
+        <div class="log-line">
+          <span class="log-kind">{line.kind}</span>
+          <span class="log-name">{line.name}</span>
+          <span class="log-data">{line.data}</span>
+          {line.count && <span class="log-kind">{line.count}</span>}
+          {line.result && <span class={line.ok ? 'log-ok' : 'log-refused'}>{line.result}</span>}
+        </div>
+      ))
+    }
+  </div>
+</figure>
+
+<style>
+  .log-body {
+    display: grid;
+    gap: 3px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font: 12.5px/1.6 var(--mono);
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
+  }
+
+  .log-line {
+    display: flex;
+    gap: 10px;
+    width: max-content;
+    white-space: nowrap;
+  }
+
+  .log-kind {
+    color: var(--faint);
+  }
+
+  .log-kind:first-child {
+    width: 44px;
+  }
+
+  .log-name {
+    color: var(--ink);
+  }
+
+  .log-data {
+    color: var(--muted);
+  }
+
+  .log-ok {
+    color: #4ade80;
+  }
+
+  .log-refused {
+    color: var(--danger);
+  }
+</style>

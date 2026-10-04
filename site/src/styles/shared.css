@@ -1,0 +1,231 @@
+/* The phone menu, the footer, section headings and the motion every page shares. */
+
+/* Phone menu: a details element, so it opens without a script. */
+.mnav {
+  position: static;
+}
+
+.mnav summary {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  list-style: none;
+  cursor: pointer;
+}
+
+.mnav summary::-webkit-details-marker {
+  display: none;
+}
+
+.mnav summary svg {
+  width: 18px;
+  height: 18px;
+}
+
+.mnav-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  display: grid;
+  gap: 2px;
+  padding: 10px 20px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(9, 9, 11, 0.97);
+}
+
+.mnav-panel a {
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mnav-panel a:last-child {
+  border-bottom: 0;
+}
+
+/* Sections */
+.section {
+  padding: 64px 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--accent);
+  font: 600 12px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: '';
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.head {
+  max-width: 720px;
+  margin-bottom: 40px;
+}
+
+.head h2 {
+  margin-top: 14px;
+  font-size: clamp(30px, 6.4vw, 46px);
+  font-weight: 800;
+}
+
+.head p {
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 17px;
+}
+
+.head.center {
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
+}
+
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+/* Motion: the page intro, and blocks that rise into place as they are scrolled to. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+.intro {
+  animation: rise 0.7s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 60ms);
+}
+
+.js .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.6s var(--ease-out),
+    transform 0.7s var(--ease-out);
+  transition-delay: var(--delay, 0ms);
+}
+
+.js .reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* Footer */
+.foot {
+  margin-top: 40px;
+  padding: 56px 0 28px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.foot-in {
+  display: grid;
+  gap: 36px;
+}
+
+.foot-brand p {
+  max-width: 340px;
+  margin-top: 14px;
+  color: var(--faint);
+  font-size: 14px;
+}
+
+.foot-cols {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+}
+
+.foot-cols h4 {
+  margin-bottom: 10px;
+  color: var(--faint);
+  font: 600 11px/1.4 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.foot-cols a {
+  display: block;
+  padding: 4px 0;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.foot-cols a:hover {
+  color: var(--accent);
+}
+
+.foot-legal {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--faint);
+  font-size: 12.5px;
+}
+
+@media (min-width: 760px) {
+  .hide-sm {
+    display: inline-flex;
+  }
+
+  .section {
+    padding: 104px 0;
+  }
+
+  .foot-in {
+    grid-template-columns: 1fr 1.5fr;
+  }
+
+  .foot-cols {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1000px) {
+  .nav {
+    display: flex;
+  }
+
+  .mnav {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}

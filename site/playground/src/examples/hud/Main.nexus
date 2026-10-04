@@ -1,0 +1,97 @@
+---
+import { computed, nui } from 'nexus';
+
+// A reactive mirror of the state Lua sets. Reading a key in the template is all
+// it takes for that one node to update when the key changes.
+const hud = nui.state('hud');
+const low = computed(() => hud.fuel < 20);
+---
+
+<screen layer="hud" />
+
+<aside class="hud">
+  <p class="speed"><strong>{hud.speed}</strong> km/h</p>
+  <p class="street">{hud.street}</p>
+  <div class="fuel" class:low>
+    <span>Fuel</span>
+    <div class="track"><div class="fill" style:width="{hud.fuel}%"></div></div>
+    <span class="amount">{hud.fuel}</span>
+  </div>
+</aside>
+
+<style>
+  .hud {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    box-sizing: border-box;
+    width: 240px;
+    padding: 16px 18px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    background: rgba(17, 17, 19, 0.92);
+    color: #f5f5f5;
+    font: 500 14px/1.3 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .speed {
+    margin: 0;
+    color: #71717a;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .speed strong {
+    margin-right: 4px;
+    color: #f5f5f5;
+    font-size: 52px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .street {
+    margin: 4px 0 14px;
+    color: #a1a1aa;
+  }
+
+  .fuel {
+    display: grid;
+    grid-template-columns: auto 1fr 26px;
+    align-items: center;
+    gap: 10px;
+    color: #a1a1aa;
+    font-size: 12px;
+  }
+
+  .track {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #c8ff3d;
+    transition: width 200ms ease, background 200ms ease;
+  }
+
+  .amount {
+    color: #f5f5f5;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .low .fill {
+    background: #f87171;
+  }
+
+  .low .amount {
+    color: #f87171;
+  }
+</style>

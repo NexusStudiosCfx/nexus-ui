@@ -1,0 +1,65 @@
+---
+/** Why, cases 3 and 4: what a screen does about focus, and what it costs while it is closed. */
+import Case from './Case.astro';
+import Live from './Live.astro';
+import BridgeLog from './BridgeLog.astro';
+import Code from '../Code.astro';
+import { href } from '../../lib/paths';
+import * as sample from '../../samples/why-screens';
+---
+
+<Case
+  id="why-focus"
+  index={3}
+  title="Focus, the cursor and Escape are rewritten in every resource"
+  todayEnds="Every resource keeps this bookkeeping, and one missed case is a stuck cursor."
+  nexusEnds="One tag. Focus follows the screens that are open, and is released when the resource stops."
+>
+  <Fragment slot="lead">
+    A screen declares in its own file what it takes from the player and how it closes. The build writes that down for Lua, and the
+    client runtime gives and releases focus as screens open and close.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.focusLua} lang="lua" file="client/main.lua" tone="bad" lines={{ 5: 'bad', 11: 'bad', 19: 'bad' }} />
+    <Code code={sample.focusPage} lang="js" file="web/app.js" tone="bad" />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Code code={sample.screenTag} lang="nexus" file="web/screens/Shop.nexus" tone="good" lines={{ 1: 'good' }} />
+    <Code code={sample.screenLua} lang="lua" file="client/main.lua" tone="good" />
+    <Code code={sample.screensLua} lang="lua" file="nexus/screens.lua" note="generated" tone="good" />
+    <ul class="case-facts">
+      <li>The screen opened last that asks for focus has it. When it closes, focus goes back to the one before, or to the game.</li>
+      <li>Escape closes one screen at a time, and the pause menu is kept shut for a quarter of a second after it.</li>
+      <li>A screen on the <code class="ic">hud</code> layer never takes focus.</li>
+    </ul>
+  </Fragment>
+</Case>
+
+<Case
+  id="why-idle"
+  index={4}
+  title="A closed UI still costs"
+  todayEnds="A parked car still sends ten messages a second, and a closed menu still holds its framework."
+  nexusEnds="A parked car sends nothing. With nothing open, the page has no nodes and runs nothing."
+>
+  <Fragment slot="lead">
+    A screen's code is loaded when it is first opened, and its nodes are removed when it closes. State is patched, not resent:
+    <code class="ic">Nexus.set</code> compares with what it sent before and sends only the keys that changed.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.idleLua} lang="lua" file="client/main.lua" tone="bad" lines={{ 4: 'bad' }} />
+    <Code code={sample.idlePage} lang="jsx" file="web/main.jsx" tone="bad" />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Code code={sample.setLua} lang="lua" file="client/main.lua" tone="good" lines={{ 6: 'good' }} />
+    <Code code={sample.hudScreen} lang="nexus" file="web/screens/Hud.nexus" tone="good" />
+  </Fragment>
+  <Fragment slot="result">
+    <BridgeLog lines={sample.stateLog} caption="What crosses the bridge for a moving car" />
+    <Live example="hud">A HUD fed by state, which the mock changes on a timer as the game would.</Live>
+    <p class="case-note">
+      Each line is a patch with the keys that changed, never the whole state. In the page, only the node that shows a changed key
+      updates. The details are in <a href={href('/docs/guide/#7-a-hud-fed-by-lua')}>the guide</a>.
+    </p>
+  </Fragment>
+</Case>

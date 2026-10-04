@@ -1,0 +1,151 @@
+/* Nexus UI: the landing page, the playground page and the 404. Zinc surfaces from deepest to
+   nearest, one lime accent, hairline borders, Inter for text and JetBrains Mono for code and
+   labels. Mobile first; columns from 760px and 1080px. */
+
+:root {
+  --bg: #09090b;
+  --surface: #111113;
+  --card: #151518;
+  --elevated: #1a1a1e;
+  --overlay: #202026;
+  --code: #0d0d10;
+  --ink: #f5f5f5;
+  --muted: #a1a1aa;
+  --faint: #8b8b96;
+  --accent: #c8ff3d;
+  --accent-ink: #0b1400;
+  --accent-soft: rgba(200, 255, 61, 0.12);
+  --accent-ring: rgba(200, 255, 61, 0.3);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.1);
+  --line: rgba(255, 255, 255, 0.07);
+  --line-2: rgba(255, 255, 255, 0.12);
+  --radius: 18px;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --font: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  overflow-x: clip;
+  scroll-behavior: smooth;
+  scroll-padding-top: 84px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--mono);
+  font-variant-ligatures: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: rgba(200, 255, 61, 0.28);
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 50;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: none;
+}
+
+/* Inline code in running text. */
+.ic {
+  padding: 0.1em 0.38em;
+  border: 1px solid var(--line-2);
+  border-radius: 6px;
+  background: var(--elevated);
+  color: var(--ink);
+  font-size: 0.86em;
+  white-space: nowrap;
+}
+
+@media (min-width: 760px) {
+  .wrap {
+    padding: 0 32px;
+  }
+}

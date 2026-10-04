@@ -1,0 +1,94 @@
+---
+import { signal, nui, after } from 'nexus';
+
+interface Toast {
+  id: number;
+  kind: 'info' | 'success' | 'warning';
+  text: string;
+}
+
+const toasts = signal<Toast[]>([]);
+
+// Listens until the screen closes. The timer belongs to the screen as well.
+nui.on('notify', (toast) => {
+  toasts.value = [...toasts.value, toast];
+  after(4200, () => {
+    toasts.value = toasts.value.filter((shown) => shown.id !== toast.id);
+  });
+});
+---
+
+<screen layer="hud" />
+
+<ol class="toasts">
+  {#each toasts as toast (toast.id)}
+    <!-- The row gets `slide-enter` when it is inserted and `slide-leave` before it
+         goes, and it stays in the document until the leave animation has ended. -->
+    <li class="toast {toast.kind}" transition:slide>{toast.text}</li>
+  {/each}
+</ol>
+
+<style>
+  .toasts {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: grid;
+    gap: 8px;
+    width: min(280px, calc(100% - 32px));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font: 500 14px/1.4 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .toast {
+    position: relative;
+    padding: 11px 14px 11px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background: #151518;
+    color: #f5f5f5;
+  }
+
+  .toast::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 8px;
+    width: 3px;
+    border-radius: 999px;
+    background: #60a5fa;
+  }
+
+  .toast.success::before {
+    background: #4ade80;
+  }
+
+  .toast.warning::before {
+    background: #fbbf24;
+  }
+
+  .slide-enter {
+    animation: slide-in 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .slide-leave {
+    animation: slide-out 180ms ease-in forwards;
+  }
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+  }
+
+  @keyframes slide-out {
+    to {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+  }
+</style>

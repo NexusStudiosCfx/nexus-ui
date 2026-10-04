@@ -1,0 +1,31 @@
+---
+/** A code sample in a window: a bar with the file name, then the highlighted source. */
+import { dedent, highlight, type HighlightOptions, type Lang, type Tone } from '../lib/highlight';
+
+interface Props extends HighlightOptions {
+  code: string;
+  lang: Lang;
+  /** The path shown in the bar. */
+  file?: string;
+  /** A short note at the end of the bar, such as "generated". */
+  note?: string;
+  /** Tints the window: a sample of the problem, or of the answer to it. */
+  tone?: Exclude<Tone, 'dim'>;
+  class?: string;
+}
+
+const { code, lang, file, note, tone, lines, marks, class: className } = Astro.props;
+const html = await highlight(dedent(code), lang, { lines, marks });
+---
+
+<figure class:list={['code', tone && `code-${tone}`, className]}>
+  {
+    (file || note) && (
+      <figcaption class="code-bar">
+        {file && <span class="code-file">{file}</span>}
+        {note && <span class="code-note">{note}</span>}
+      </figcaption>
+    )
+  }
+  <div class="code-body" set:html={html} />
+</figure>

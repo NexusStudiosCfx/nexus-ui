@@ -1,0 +1,143 @@
+---
+import Site from '../layouts/Site.astro';
+import symbol from '../assets/brand/symbol.png';
+import { href } from '../lib/paths';
+
+const PLACES = [
+  { label: 'Guide', to: href('/docs/guide/') },
+  { label: 'The .nexus format', to: href('/docs/format/') },
+  { label: 'The bridge', to: href('/docs/bridge/') },
+  { label: 'Command line', to: href('/docs/cli/') },
+  { label: 'Roadmap', to: href('/docs/roadmap/') },
+];
+---
+
+<Site title="Page not found" description="This page does not exist. The landing page, the documentation and the playground do.">
+  <section class="lost">
+    <div class="lost-glow" aria-hidden="true"></div>
+    <div class="wrap">
+      <img class="lost-symbol intro" style="--i:0" src={symbol.src} alt="" width="62" height="72" />
+      <pre class="lost-code intro" style="--i:0" aria-hidden="true"><code><span class="k">Nexus</span>.open(<span class="s">'404'</span>)
+<span class="e">Nexus.open: there is no screen '404'</span></code></pre>
+      <span class="eyebrow intro" style="--i:1">Error 404</span>
+      <h1 class="intro" style="--i:2">There is no page at this address.</h1>
+      <p class="intro" style="--i:3">The link may be old, or the page moved. Here is where you can go instead.</p>
+      <div class="lost-links intro" style="--i:4">
+        <a class="btn btn-primary btn-lg" href={href('/')}>Home</a>
+        <a class="btn btn-ghost btn-lg" href={href('/docs/')}>Docs</a>
+        <a class="btn btn-ghost btn-lg" href={href('/playground/')}>Playground</a>
+      </div>
+      <nav class="lost-places intro" style="--i:5" aria-label="Documentation">
+        {PLACES.map((place) => <a href={place.to}>{place.label}</a>)}
+      </nav>
+    </div>
+  </section>
+</Site>
+
+<style>
+  .lost {
+    position: relative;
+    display: grid;
+    min-height: calc(100vh - 66px - 320px);
+    place-items: center;
+    padding: 72px 0;
+    overflow: hidden;
+    text-align: center;
+  }
+
+  .lost-glow {
+    position: absolute;
+    inset: -66px 0 auto;
+    height: 620px;
+    background: radial-gradient(50% 58% at 50% 0%, rgba(200, 255, 61, 0.13), transparent 72%);
+    pointer-events: none;
+  }
+
+  .lost .wrap {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 18px;
+  }
+
+  .lost-symbol {
+    width: auto;
+    height: 72px;
+    margin-bottom: 8px;
+    filter: drop-shadow(0 0 28px rgba(200, 255, 61, 0.3));
+  }
+
+  .lost-code {
+    max-width: 100%;
+    margin: 0 0 14px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    border: 1px solid var(--line-2);
+    border-radius: 14px;
+    background: var(--code);
+    color: #e4e4e7;
+    font-size: 13.5px;
+    line-height: 1.8;
+    text-align: left;
+  }
+
+  .lost-code .k {
+    color: #fff;
+  }
+
+  .lost-code .s {
+    color: #f0cf8e;
+  }
+
+  .lost-code .e {
+    color: var(--danger);
+  }
+
+  h1 {
+    max-width: 14em;
+    font-size: clamp(32px, 7vw, 54px);
+    font-weight: 800;
+  }
+
+  p {
+    max-width: 30em;
+    color: var(--muted);
+    font-size: 17px;
+  }
+
+  .lost-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+  }
+
+  .lost-places {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .lost-places a {
+    padding: 6px 13px;
+    border: 1px solid var(--line-2);
+    border-radius: 999px;
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      color 0.15s,
+      border-color 0.15s,
+      background-color 0.15s;
+  }
+
+  .lost-places a:hover {
+    border-color: var(--accent-ring);
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+</style>

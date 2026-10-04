@@ -1,0 +1,24 @@
+---
+import Site from '../layouts/Site.astro';
+import Hero from '../components/home/Hero.astro';
+import Why from '../components/home/Why.astro';
+import How from '../components/home/How.astro';
+import Numbers from '../components/home/Numbers.astro';
+import NotYet from '../components/home/NotYet.astro';
+import Start from '../components/home/Start.astro';
+import '../styles/home-hero.css';
+import '../styles/home-why.css';
+import '../styles/home-rest.css';
+import { href } from '../lib/paths';
+---
+
+<Site>
+  <Hero />
+  <Why />
+  <How />
+  <Numbers />
+  <NotYet />
+  <Start />
+</Site>
+
+<script is:inline type="module" src={href('/sandbox-loader.js')}></script>

@@ -1,0 +1,46 @@
+---
+/** The heart of the landing page: what a NUI leaves to its author today, and what each becomes. */
+import WhyMessages from './WhyMessages.astro';
+import WhyScreens from './WhyScreens.astro';
+import WhyTooling from './WhyTooling.astro';
+
+const CASES = [
+  { id: 'why-types', label: 'Typos in messages' },
+  { id: 'why-server', label: 'Server events' },
+  { id: 'why-focus', label: 'Focus and Escape' },
+  { id: 'why-idle', label: 'Idle cost' },
+  { id: 'why-chromium', label: 'Chromium 103' },
+  { id: 'why-phone', label: 'Phone apps' },
+  { id: 'why-dev', label: 'Working without the game' },
+];
+---
+
+<section class="section" id="why">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="eyebrow">Why</span>
+      <h2>What a NUI leaves to you, and what it becomes</h2>
+      <p>
+        A NUI is a web page in a browser from 2022, talking to a game through untyped messages, on a server where any client may be
+        hostile. The usual stack leaves each of those to the resource author. Nexus UI takes them on as the framework's job.
+      </p>
+    </div>
+
+    <ol class="why-index reveal" aria-label="The reasons, one by one">
+      {
+        CASES.map((item, index) => (
+          <li>
+            <a href={`#${item.id}`}>
+              <b>{String(index + 1).padStart(2, '0')}</b>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ol>
+
+    <WhyMessages />
+    <WhyScreens />
+    <WhyTooling />
+  </div>
+</section>

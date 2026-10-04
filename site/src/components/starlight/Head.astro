@@ -1,0 +1,16 @@
+---
+/** Starlight's head, plus the rest of the icons and the social image of the page (src/pages/og). */
+import Default from '@astrojs/starlight/components/Head.astro';
+import { href, socialImage } from '../../lib/paths';
+
+const { id } = Astro.locals.starlightRoute;
+const image = new URL(socialImage(id), Astro.site ?? Astro.url).href;
+---
+
+<Default />
+<link rel="icon" type="image/png" sizes="32x32" href={href('/favicon-32.png')} />
+<link rel="apple-touch-icon" href={href('/apple-touch-icon.png')} />
+<meta property="og:image" content={image} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:image" content={image} />

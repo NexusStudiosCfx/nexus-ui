@@ -1,0 +1,172 @@
+/* Code windows and terminals (src/components/Code.astro, Terminal.astro), and the install command. */
+
+.code {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 14px;
+  background: var(--code);
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font: 500 12.5px/1.3 var(--mono);
+}
+
+.code-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-note {
+  flex: none;
+  margin-left: auto;
+  padding: 3px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  color: var(--faint);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.code-bad .code-note {
+  border-color: rgba(248, 113, 113, 0.3);
+  color: var(--danger);
+}
+
+.code-good .code-note {
+  border-color: var(--accent-ring);
+  color: var(--accent);
+}
+
+.code-body pre {
+  margin: 0;
+  padding: 14px 0;
+  overflow-x: auto;
+  color: #e4e4e7;
+  font-size: 12.5px;
+  line-height: 1.7;
+  tab-size: 2;
+  scrollbar-width: thin;
+  scrollbar-color: #3f3f46 transparent;
+}
+
+.code-body pre:focus-visible {
+  outline-offset: -2px;
+  border-radius: 0 0 14px 14px;
+}
+
+.code-body code {
+  display: grid;
+  width: max-content;
+  min-width: 100%;
+}
+
+.code-body .line,
+.code-body .t-line {
+  min-height: 1.7em;
+  padding: 0 16px;
+  white-space: pre;
+}
+
+.line.is-bad {
+  background: var(--danger-soft);
+  box-shadow: inset 2px 0 0 var(--danger);
+}
+
+.line.is-good {
+  background: var(--accent-soft);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.line.is-dim {
+  opacity: 0.42;
+}
+
+.mark-bad,
+.mark-good {
+  padding: 2px 0;
+  border-radius: 4px;
+}
+
+.mark-bad {
+  background: rgba(248, 113, 113, 0.2);
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.45);
+}
+
+.mark-good {
+  background: rgba(200, 255, 61, 0.14);
+  box-shadow: 0 0 0 1px rgba(200, 255, 61, 0.4);
+}
+
+/* Terminal: messages wrap, the code frames under them keep their columns. */
+.term .code-body code {
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+
+.term .t-line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.term .t-frame {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+.term-dots {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.term-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2e2e35;
+}
+
+.term .code-body pre {
+  color: #c4c4cc;
+}
+
+.t-err {
+  color: var(--danger);
+}
+
+.t-ok {
+  color: #4ade80;
+}
+
+.t-dim {
+  color: var(--faint);
+}
+
+.t-cmd {
+  color: var(--ink);
+}
+
+.t-hot {
+  color: var(--ink);
+}
+
+@media (min-width: 760px) {
+  .code-body pre {
+    font-size: 13px;
+  }
+
+  .code-body .line,
+  .code-body .t-line {
+    padding: 0 18px;
+  }
+}

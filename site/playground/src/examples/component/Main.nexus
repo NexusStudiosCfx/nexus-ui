@@ -1,0 +1,87 @@
+---
+import { signal } from 'nexus';
+import Card from './Card.nexus';
+
+const crew = signal(['Franklin', 'Lamar']);
+const recruits = ['Trevor', 'Michael', 'Chop'];
+const accent = signal(true);
+
+function recruit() {
+  const next = recruits[crew.value.length - 2];
+  if (next) crew.value = [...crew.value, next];
+}
+---
+
+<screen focus="mouse keyboard" close="escape" />
+
+<main class="stage">
+  <!-- An attribute is a prop. An expression is passed live: the card follows. -->
+  <Card title="Crew" tone={accent.value ? 'accent' : 'plain'}>
+    <span slot="badge" class="badge">{crew.value.length}</span>
+    <ul>
+      {#each crew as member (member)}
+        <li>{member}</li>
+      {/each}
+    </ul>
+    <div class="buttons">
+      <button on:click={recruit} disabled={crew.value.length === 5}>Recruit</button>
+      <button on:click={() => (accent.value = !accent.value)}>Accent</button>
+    </div>
+  </Card>
+
+  <Card title="Garage" />
+</main>
+
+<style>
+  .stage {
+    display: grid;
+    align-content: center;
+    gap: 12px;
+    box-sizing: border-box;
+    width: min(320px, calc(100% - 32px));
+    height: 100%;
+    margin: 0 auto;
+    color: #f5f5f5;
+    font: 500 14px/1.45 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* Slot content belongs to this file: it takes these styles, not the card's. */
+  .badge {
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: rgba(200, 255, 61, 0.12);
+    color: #c8ff3d;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  ul {
+    display: grid;
+    gap: 4px;
+    margin: 0 0 12px;
+    padding: 0;
+    color: #a1a1aa;
+    list-style: none;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  button {
+    height: 34px;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: #1a1a1e;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+</style>

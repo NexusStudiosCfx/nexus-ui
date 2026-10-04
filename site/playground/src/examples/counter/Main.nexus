@@ -1,0 +1,108 @@
+---
+import { signal, computed } from 'nexus';
+
+// A signal is a value the template follows. When it changes, the nodes that read
+// it update, and nothing else runs: this script is executed once.
+const count = signal(0);
+const doubled = computed(() => count.value * 2);
+---
+
+<screen focus="mouse keyboard" close="escape" />
+
+<main class="stage">
+  <section class="card">
+    <p class="label">Count</p>
+    <p class="value" class:zero={count.value === 0}>{count}</p>
+    <p class="note">Doubled, that is {doubled}.</p>
+    <div class="buttons">
+      <button on:click={() => count.value--} disabled={count.value === 0}>
+        Take one
+      </button>
+      <button class="primary" on:click={() => count.value++}>Add one</button>
+    </div>
+  </section>
+</main>
+
+<style>
+  .stage {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    color: #f5f5f5;
+    font: 500 14px/1.45 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .card {
+    box-sizing: border-box;
+    width: min(300px, calc(100% - 32px));
+    padding: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    background: #111113;
+  }
+
+  .label {
+    margin: 0;
+    color: #71717a;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .value {
+    margin: 2px 0 0;
+    color: #c8ff3d;
+    font-size: 56px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    transition: color 180ms ease;
+  }
+
+  .value.zero {
+    color: #52525b;
+  }
+
+  .note {
+    margin: 0 0 18px;
+    color: #a1a1aa;
+  }
+
+  .buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  button {
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: #1a1a1e;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition: background 150ms ease, opacity 150ms ease;
+  }
+
+  button:hover {
+    background: #202026;
+  }
+
+  button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  button.primary {
+    border-color: transparent;
+    background: #c8ff3d;
+    color: #0b1400;
+    font-weight: 600;
+  }
+
+  button.primary:hover {
+    background: #d4ff66;
+  }
+</style>

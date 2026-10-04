@@ -1,0 +1,159 @@
+---
+import { signal, nui, NuiError } from 'nexus';
+
+const items = [
+  { id: 'water', label: 'Water', price: 5 },
+  { id: 'bandage', label: 'Bandage', price: 40 },
+  { id: 'armour', label: 'Body armour', price: 900 },
+] as const;
+
+const balance = signal(props.balance);
+const notice = signal('');
+
+async function buy(item: (typeof items)[number]['id']) {
+  notice.value = '';
+  try {
+    // Typed by contract.ts: a wrong name or a missing key is a type error.
+    const answer = await nui.call('shop:buy', { item });
+    balance.value = answer.balance;
+  } catch (error) {
+    if (!(error instanceof NuiError)) throw error;
+    if (error.code === 'not_enough_money') {
+      const { missing } = error.details as { missing: number };
+      notice.value = `You are $${missing} short.`;
+    } else if (error.code === 'rate_limited') {
+      notice.value = 'Slow down a little.';
+    } else {
+      notice.value = `The shop refused: ${error.code}.`;
+    }
+  }
+}
+---
+
+<screen focus="mouse keyboard" close="escape" />
+
+<main class="stage">
+  <section class="shop">
+    <header>
+      <h1>Shop</h1>
+      <p class="balance"><span>Balance</span> ${balance}</p>
+    </header>
+    <ul>
+      {#each items as item (item.id)}
+        <li>
+          <span>{item.label}</span>
+          <button on:click={() => buy(item.id)} disabled={nui.pending('shop:buy')}>
+            ${item.price}
+          </button>
+        </li>
+      {/each}
+    </ul>
+    {#if notice}
+      <p class="notice" transition:rise>{notice}</p>
+    {/if}
+  </section>
+</main>
+
+<style>
+  .stage {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    color: #f5f5f5;
+    font: 500 14px/1.45 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .shop {
+    box-sizing: border-box;
+    width: min(320px, calc(100% - 32px));
+    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    background: #111113;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .balance {
+    margin: 0;
+    color: #c8ff3d;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .balance span {
+    margin-right: 6px;
+    color: #71717a;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 8px 8px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    background: #151518;
+  }
+
+  button {
+    min-width: 64px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    background: #c8ff3d;
+    color: #0b1400;
+    font: inherit;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition: opacity 150ms ease;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .notice {
+    margin: 12px 0 0;
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+
+  .rise-enter {
+    animation: rise 180ms ease-out;
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+</style>

@@ -1,0 +1,216 @@
+.nxp-problem-frame {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--base);
+  color: var(--faint);
+  font: 12px/1.6 var(--mono);
+}
+
+.nxp-frame-here {
+  color: var(--ink);
+}
+
+.nxp-frame-marker {
+  color: var(--danger);
+}
+
+.nxp-problem-more {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  list-style: none;
+}
+
+.nxp-problem-more li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.nxp-problem-bar {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+  padding: 4px 6px 4px 12px;
+  border: 1px solid rgba(248, 113, 113, 0.25);
+  border-radius: 10px;
+  background: rgba(21, 21, 24, 0.96);
+  animation: nxp-rise 180ms var(--ease);
+}
+
+.nxp-problem-bar-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes nxp-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* The bridge log. */
+
+.nxp-log {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  height: 172px;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.nxp-log-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 6px 0 14px;
+}
+
+.nxp-count {
+  color: var(--ghost);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.nxp-log-lines {
+  flex: 1;
+  min-height: 0;
+  padding: 0 6px 8px;
+  overflow: auto;
+  font: 12px/1.5 var(--mono);
+}
+
+.nxp-log-empty {
+  margin: 0;
+  padding: 2px 8px;
+  color: var(--ghost);
+  font: 500 12px/1.5 var(--font);
+}
+
+.nxp-line {
+  display: flex;
+  gap: 10px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.nxp-line:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.nxp-line.is-open {
+  flex-wrap: wrap;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.nxp-kind {
+  flex: none;
+  width: 38px;
+  color: var(--ghost);
+}
+
+.nxp-name {
+  flex: none;
+  color: var(--ink);
+}
+
+.nxp-data {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+}
+
+.nxp-arrow,
+.nxp-times,
+.nxp-ms {
+  flex: none;
+  color: var(--ghost);
+}
+
+.nxp-ms {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.nxp-ok {
+  flex: none;
+  color: var(--positive);
+}
+
+.nxp-refused {
+  flex: none;
+  color: var(--danger);
+}
+
+.nxp-line.is-warn .nxp-kind,
+.nxp-line.is-warn .nxp-data {
+  color: var(--warning);
+}
+
+.nxp-line.is-error .nxp-kind,
+.nxp-line.is-error .nxp-data {
+  color: var(--danger);
+}
+
+/* Stacked: the editor, then the preview, then the log. */
+
+.nxp.is-narrow .nxp-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.nxp.is-narrow .nxp-code {
+  height: 380px;
+  border-right: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.nxp.is-narrow.is-compact .nxp-code {
+  height: 280px;
+}
+
+.nxp.is-narrow .nxp-stage {
+  flex: none;
+  height: 320px;
+}
+
+.nxp.is-narrow.is-compact .nxp-stage {
+  height: 260px;
+}
+
+.nxp.is-narrow .nxp-line {
+  flex-wrap: wrap;
+  gap: 0 10px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.nxp.is-narrow .nxp-toggle span,
+.nxp.is-narrow .nxp-blurb {
+  display: none;
+}
+
+.nxp.is-narrow .nxp-menu-button .nxp-label {
+  display: none;
+}

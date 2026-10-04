@@ -1,0 +1,5 @@
+node_modules/
+dist/
+
+# Built from src/frame by `npm run dev` and `npm run build`.
+public/

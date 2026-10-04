@@ -1,0 +1,22 @@
+---
+/** The way from the docs to the rest of the site, before Starlight's social links. */
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+import { href } from '../../lib/paths';
+---
+
+<a class="docs-nav-link" href={href('/playground/')}>Playground</a>
+<Default />
+
+<style>
+  .docs-nav-link {
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .docs-nav-link:hover {
+    color: var(--sl-color-white);
+  }
+</style>

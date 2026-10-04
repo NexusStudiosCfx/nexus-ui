@@ -1,0 +1,53 @@
+---
+interface Props {
+  title: string;
+  tone?: 'plain' | 'accent';
+}
+---
+
+<article class="card" class:accent={props.tone === 'accent'}>
+  <header>
+    <h2>{props.title}</h2>
+    <slot name="badge" />
+  </header>
+  <!-- What the parent wrote between the tags, or this text without any. -->
+  <slot>
+    <p class="empty">Nothing here yet.</p>
+  </slot>
+</article>
+
+<style>
+  .card {
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    background: #111113;
+    transition: border-color 180ms ease;
+  }
+
+  .card.accent {
+    border-color: rgba(200, 255, 61, 0.3);
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .accent h2 {
+    color: #c8ff3d;
+  }
+
+  .empty {
+    margin: 0;
+    color: #71717a;
+  }
+</style>

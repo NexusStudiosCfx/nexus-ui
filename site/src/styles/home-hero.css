@@ -1,0 +1,255 @@
+/* The hero of the landing page: the pitch, the install command, and a component next to its result. */
+
+.hero {
+  position: relative;
+  padding: 44px 0 24px;
+}
+
+.hero-glow,
+.hero-grid {
+  position: absolute;
+  inset: -66px 0 auto;
+  height: 760px;
+  pointer-events: none;
+}
+
+.hero-glow {
+  background: radial-gradient(52% 58% at 50% 0%, rgba(200, 255, 61, 0.15), transparent 72%);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-position: center top;
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 0%, #000 15%, transparent 75%);
+  mask-image: radial-gradient(70% 70% at 50% 0%, #000 15%, transparent 75%);
+}
+
+.hero-in {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 5px 13px 5px 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: border-color 0.2s;
+}
+
+.pill:hover {
+  border-color: var(--accent-ring);
+}
+
+.pill b {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: 700 11px/1.3 var(--mono);
+}
+
+.hero h1 {
+  max-width: 14em;
+  margin-top: 24px;
+  font-size: clamp(38px, 8.6vw, 76px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.02;
+}
+
+.hero h1 .accent {
+  color: var(--accent);
+}
+
+.lead {
+  max-width: 40em;
+  margin-top: 22px;
+  color: var(--muted);
+  font-size: 17.5px;
+}
+
+.hero-actions {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 100%;
+  margin-top: 32px;
+}
+
+.hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+.hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 22px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--faint);
+  font: 500 11.5px/1.5 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* A component next to its result. The sandbox takes this place over when it is asked for. */
+.demo {
+  display: grid;
+  width: 100%;
+  margin-top: 56px;
+  overflow: hidden;
+  border: 1px solid var(--line-2);
+  border-radius: 20px;
+  background: var(--code);
+  box-shadow:
+    0 0 110px -40px rgba(200, 255, 61, 0.3),
+    0 50px 120px -50px rgba(0, 0, 0, 0.95);
+  text-align: left;
+}
+
+.demo .demo-code {
+  border: 0;
+  border-radius: 0;
+}
+
+.demo .result {
+  border-top: 1px solid var(--line-2);
+}
+
+/* The sandbox brings its own frame. */
+.demo[data-sandbox-state='live'] {
+  display: block;
+  overflow: visible;
+  border: 0;
+  border-radius: 18px;
+  background: none;
+}
+
+/* What the button does, said under the picture: only where the button is. */
+.demo-hint {
+  display: none;
+  max-width: 52em;
+  margin-top: 16px;
+  color: var(--faint);
+  font-size: 14px;
+}
+
+.demo-hint b {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.demo-hint a {
+  margin-left: 4px;
+  color: var(--muted);
+  text-decoration-color: rgba(200, 255, 61, 0.5);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.demo-hint a:hover {
+  color: var(--accent);
+}
+
+.demo-hint-live,
+.demo[data-sandbox-state='live'] + .demo-hint .demo-hint-run {
+  display: none;
+}
+
+.demo[data-sandbox-state='live'] + .demo-hint .demo-hint-live {
+  display: inline;
+}
+
+.notes {
+  display: grid;
+  gap: 22px;
+  width: 100%;
+  margin: 36px 0 0;
+  text-align: left;
+}
+
+.notes dt code {
+  color: var(--accent);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.notes dd {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 14.5px;
+}
+
+@media (min-width: 760px) {
+  .hero {
+    padding: 76px 0 40px;
+  }
+
+  .lead {
+    font-size: 19px;
+  }
+
+  .hero-actions {
+    grid-auto-flow: column;
+    align-items: center;
+  }
+
+  .notes {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px;
+    margin-top: 44px;
+  }
+}
+
+@media (min-width: 1000px) {
+  .demo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    height: 560px;
+  }
+
+  .js .demo-hint {
+    display: block;
+  }
+
+  .js .demo[data-sandbox-state='off'] + .demo-hint,
+  .js .demo[data-sandbox-state='failed'] + .demo-hint {
+    display: none;
+  }
+
+  .demo .demo-code {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .demo .demo-code .code-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 transparent;
+  }
+
+  .demo .result {
+    border-top: 0;
+    border-left: 1px solid var(--line-2);
+  }
+}

@@ -1,0 +1,58 @@
+---
+/** What the framework does not do, said on the landing page and not only on the roadmap. */
+import { href } from '../../lib/paths';
+
+const LIMITS = [
+  {
+    title: 'No language server',
+    text: 'The VS Code extension highlights .nexus files and has snippets. It does not complete or underline errors: type errors come from nexus check, in the terminal.',
+  },
+  {
+    title: 'Nothing drives a game client',
+    text: 'The Lua runtimes are tested in a real Lua 5.4 with stand-ins for the FiveM functions they use, and the example is started on a real server. No test plays the game.',
+  },
+  {
+    title: 'No helpers for ESX, QBCore or Qbox',
+    text: 'The runtimes are standalone. A handler calls the framework of the server itself.',
+  },
+  {
+    title: 'One app per surface, and only LB',
+    text: 'A resource has at most one phone app and one tablet app, in LB Phone and LB Tablet. No other phone or tablet resource is supported.',
+  },
+  {
+    title: 'One answer per call',
+    text: 'A call cannot be cancelled from the page and has no streaming answer. Progress is a push.',
+  },
+  {
+    title: 'The contract has edges',
+    text: 'No tuples, no recursive schemas, no binary payloads, and patterns are a subset of regular expressions.',
+  },
+];
+---
+
+<section class="section notyet" id="not-yet">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="eyebrow">Not yet</span>
+      <h2>What it does not do</h2>
+      <p>
+        This is version 0.2, and it is new. A feature is either in and documented, or it is on the roadmap: nothing is half done in
+        the code. These are the limits you are most likely to meet.
+      </p>
+    </div>
+    <ul class="limits">
+      {
+        LIMITS.map((limit) => (
+          <li class="reveal">
+            <h3>{limit.title}</h3>
+            <p>{limit.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <a class="btn btn-ghost reveal" href={href('/docs/roadmap/')}>
+      Read the whole roadmap
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </a>
+  </div>
+</section>

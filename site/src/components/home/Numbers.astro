@@ -1,0 +1,54 @@
+---
+/** The numbers, each with where it comes from. */
+const NUMBERS = [
+  {
+    value: '6',
+    unit: 'KB',
+    label: 'of runtime',
+    text: 'Minified and gzipped: 6,127 bytes without the bridge and 6,883 with it. A test fails when the runtime outgrows its budget.',
+  },
+  {
+    value: '790',
+    unit: '',
+    label: 'tests',
+    text: 'Across the compiler, the runtime, the contract, the command line and both Lua runtimes, which run in a real Lua 5.4.',
+  },
+  {
+    value: '103',
+    unit: '',
+    label: 'the Chromium it builds for',
+    text: 'The browser FiveM embeds. The build targets it, the check knows what it cannot run, and part of the suite runs in it.',
+  },
+  {
+    value: '0',
+    unit: '',
+    label: 'nodes while closed',
+    text: 'With nothing open, the page has no nodes and runs nothing. The client runtime starts no thread while it is idle.',
+  },
+];
+---
+
+<section class="section numbers" id="numbers">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="eyebrow">In numbers</span>
+      <h2>The numbers, and where they come from</h2>
+    </div>
+    <dl class="stats">
+      {
+        NUMBERS.map((item) => (
+          <div class="stat card reveal">
+            <dt>
+              <strong>
+                {item.value}
+                {item.unit && <small>{item.unit}</small>}
+              </strong>
+              <span>{item.label}</span>
+            </dt>
+            <dd>{item.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

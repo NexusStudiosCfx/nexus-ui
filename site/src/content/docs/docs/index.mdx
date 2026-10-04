@@ -1,0 +1,60 @@
+---
+title: Documentation
+description: "The documentation of Nexus UI: a guide from an empty folder to a working screen, the reference of the format, the bridge and the command line, and what the project does not do yet."
+tableOfContents: false
+---
+
+import { CardGrid, Code, LinkCard } from '@astrojs/starlight/components';
+import { href } from '../../../lib/paths';
+import { SITE } from '../../../../site.config.mjs';
+
+Nexus UI is a UI framework for FiveM resources. You write components in `.nexus` files and
+declare every message between the page and Lua once. What you get is a page that costs nothing
+while it is closed, and a server that only ever sees input it has already validated.
+
+<Code code={`${SITE.install}\ncd my_shop\nnpm install\nnpm run dev`} lang="sh" frame="none" />
+
+`npm run dev` opens the UI in a browser, with a mock in place of the game. It needs Node.js 20
+or newer, and the resource needs `lua54 'yes'`.
+
+## Start
+
+<LinkCard
+  title="Guide"
+  description="From nexus create to a working screen, step by step. About fifteen minutes, and it touches every part of the framework."
+  href={href('/docs/guide/')}
+/>
+
+## Reference
+
+<CardGrid>
+  <LinkCard
+    title="The .nexus format"
+    description="Script, template and styles, every directive and block, and the screen tag."
+    href={href('/docs/format/')}
+  />
+  <LinkCard
+    title="The bridge"
+    description="The contract, the Lua API, the security model and the wire format."
+    href={href('/docs/bridge/')}
+  />
+  <LinkCard
+    title="Command line"
+    description="create, dev, build and check, and the layout of a resource."
+    href={href('/docs/cli/')}
+  />
+  <LinkCard
+    title="Playground"
+    description="Edit a component in the browser and watch it run."
+    href={href('/playground/')}
+  />
+</CardGrid>
+
+## Project
+
+<CardGrid>
+  <LinkCard title="Roadmap" description="What this version does not do." href={href('/docs/roadmap/')} />
+  <LinkCard title="Changelog" description="What changed in each release." href={href('/docs/changelog/')} />
+</CardGrid>
+
+The source, the example resource and the issue tracker are on <a href={SITE.repository}>GitHub</a>.

@@ -1,0 +1,66 @@
+---
+/** How it works, in the three files a feature touches: the screen, the contract, the Lua. */
+import Code from '../Code.astro';
+import Terminal from '../Terminal.astro';
+import { href } from '../../lib/paths';
+import * as sample from '../../samples/how';
+---
+
+<section class="section how" id="how">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="eyebrow">How it works</span>
+      <h2>Three files, and nothing between them to keep in step</h2>
+      <p>
+        A feature is a screen, the messages it exchanges, and the Lua that answers. The contract sits in the middle: the types of
+        the page and the validators of the server are both written from it.
+      </p>
+    </div>
+
+    <ol class="steps">
+      <li class="step reveal">
+        <div class="step-text">
+          <span class="step-n">1</span>
+          <h3>Write a screen</h3>
+          <p>
+            A <code class="ic">.nexus</code> file holds TypeScript, markup and scoped CSS. The compiler turns it into a small module
+            that updates the DOM directly: there is no virtual DOM, and the script runs once.
+          </p>
+          <a href={href('/docs/format/')}>The .nexus format</a>
+        </div>
+        <Code code={sample.screen} lang="nexus" file="web/screens/Shop.nexus" />
+      </li>
+
+      <li class="step reveal">
+        <div class="step-text">
+          <span class="step-n">2</span>
+          <h3>Declare the contract</h3>
+          <p>
+            Every call, push, client message, state and screen is declared once. From that file come the types of
+            <code class="ic">nui</code> in the page, the Lua validators and rate limits on the server, and the checks of the browser
+            mock.
+          </p>
+          <a href={href('/docs/bridge/#the-contract')}>The contract</a>
+        </div>
+        <Code code={sample.contract} lang="ts" file="web/contract.ts" />
+      </li>
+
+      <li class="step reveal">
+        <div class="step-text">
+          <span class="step-n">3</span>
+          <h3>Handle it in Lua</h3>
+          <p>
+            The server answers the call and client Lua opens the screen. The Lua side is standalone: it needs no framework and no
+            library, and runs next to ESX, QBCore, Qbox or nothing.
+          </p>
+          <a href={href('/docs/bridge/#in-server-lua')}>The Lua API</a>
+        </div>
+        <div class="step-code">
+          <Code code={sample.server} lang="lua" file="server/main.lua" />
+          <Code code={sample.client} lang="lua" file="client/main.lua" />
+          <Terminal output={sample.start} />
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>

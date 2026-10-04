@@ -1,0 +1,97 @@
+---
+/** Why, cases 5 to 7: the browser FiveM embeds, an app in LB Phone, and working without the game. */
+import { Image } from 'astro:assets';
+import Case from './Case.astro';
+import Code from '../Code.astro';
+import Terminal from '../Terminal.astro';
+import devLog from '../../assets/shots/dev-log.png';
+import devPhone from '../../assets/shots/dev-phone.png';
+import { href } from '../../lib/paths';
+import * as sample from '../../samples/why-tooling';
+
+const WIDTHS = [640, 960, 1280, 1920];
+const SIZES = '(min-width: 1264px) 1136px, calc(100vw - 42px)';
+---
+
+<Case
+  id="why-chromium"
+  index={5}
+  title="It works in Chrome and fails in game"
+  todayEnds="Nothing warns you in the browser you develop in. In game the layout is wrong, or the script throws."
+  nexusEnds="Refused by the check and by the build, with what to write instead."
+>
+  <Fragment slot="lead">
+    FiveM's browser is Chromium 103. CSS it does not know is silently ignored there, and a missing JavaScript function throws, while
+    both work in the browser you develop in. Newer syntax is not a problem: the build rewrites it.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.modernCss} lang="css" file="web/style.css" tone="bad" marks={[{ text: 'color-mix', tone: 'bad' }, { text: ':has', tone: 'bad' }]} />
+    <Code code={sample.modernJs} lang="js" file="web/app.js" tone="bad" marks={[{ text: 'toSorted', tone: 'bad' }]} />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Code code={sample.fixed} lang="nexus" file="web/screens/Shop.nexus" tone="good" lines={{ 6: 'good', 10: 'good', 16: 'good', 19: 'good' }} />
+    <Terminal output={sample.fixedCheck} />
+  </Fragment>
+  <Fragment slot="result">
+    <Terminal output={sample.compatCheck} title="What the check said about the first version" />
+    <p class="case-note">
+      The list of what is caught, and what is not, is in
+      <a href={href('/docs/format/#what-chromium-103-cannot-run')}>the format reference</a> and the
+      <a href={href('/docs/roadmap/')}>roadmap</a>: new DOM methods are only caught from a fixed list.
+    </p>
+  </Fragment>
+</Case>
+
+<Case
+  id="why-phone"
+  index={6}
+  title="A phone app is a second build and a second bridge"
+  todayEnds="Two pages to build, two ways to send a message, and registration to keep alive by hand."
+  nexusEnds="The same build and the same contract. On a server without LB Phone the line does nothing."
+>
+  <Fragment slot="lead">
+    A screen with <code class="ic">surface="phone"</code> or <code class="ic">surface="tablet"</code> is an app in LB Phone or LB
+    Tablet. Calls, pushes, state and strings work in it as in any screen.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.phoneLua} lang="lua" file="client/phone.lua" tone="bad" />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Code code={sample.phoneScreen} lang="nexus" file="web/screens/ShopApp.nexus" tone="good" lines={{ 7: 'good' }} />
+    <Code code={sample.phoneApp} lang="lua" file="client/main.lua" tone="good" lines={{ 1: 'good' }} />
+  </Fragment>
+  <Fragment slot="result">
+    <figure class="case-shot">
+      <Image src={devPhone} alt="The garage example in a browser, with its LB Phone app shown in a phone frame over the garage screen" widths={WIDTHS} sizes={SIZES} loading="lazy" />
+      <figcaption>The example resource under <code>nexus dev</code>: its phone app in a frame of the size LB gives it, fed by the same mock.</figcaption>
+    </figure>
+  </Fragment>
+</Case>
+
+<Case
+  id="why-dev"
+  index={7}
+  title="Every change needs the game"
+  todayEnds="A restart and a walk back to the menu for every change."
+  nexusEnds="Save the file. The open screen is mounted again in place, with the props it had."
+>
+  <Fragment slot="lead">
+    <code class="ic">nexus dev</code> runs the page in a browser with a mock in place of the game. The mock enforces the contract
+    exactly as the Lua side does, with the same codes and the same messages. The game is needed to test the Lua.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.gameLoop} lang="sh" file="the loop" tone="bad" />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Terminal output={sample.devLoop} />
+  </Fragment>
+  <Fragment slot="result">
+    <figure class="case-shot">
+      <Image src={devLog} alt="The garage example in a browser under nexus dev: the garage screen, a vehicle HUD, the toolbar, and the bridge log listing calls with their answers and refusals" widths={WIDTHS} sizes={SIZES} loading="lazy" />
+      <figcaption>
+        The toolbar opens screens with the props from the mock. The log shows what crossed the bridge: an accepted purchase, one
+        the handler refused, and one the contract refused.
+      </figcaption>
+    </figure>
+  </Fragment>
+</Case>

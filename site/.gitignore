@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.screenshots/
+
+# Written by scripts/sync.mjs from ../docs, ../CHANGELOG.md and playground/dist.
+src/content/docs/docs/*
+!src/content/docs/docs/index.mdx
+public/sandbox/

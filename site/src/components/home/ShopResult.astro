@@ -1,0 +1,150 @@
+---
+/**
+ * What the screen of the hero looks like when Lua opens it: a picture, drawn in HTML with the
+ * styles of the component. The button swaps the picture for the sandbox running the same file.
+ */
+---
+
+<figure class="result">
+  <figcaption class="result-bar">
+    <span class="result-title">Result</span>
+    <code>Nexus.open('main', &#123; item = 'Water', price = 5 &#125;)</code>
+    <button type="button" class="result-run" data-sandbox-run>
+      <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.8v8.4l7-4.2-7-4.2Z" fill="currentColor"></path></svg>
+      Run it
+    </button>
+  </figcaption>
+  <div class="result-stage">
+    <div class="shop">
+      <h3>Water</h3>
+      <div class="field">1</div>
+      <div class="buy">Buy for $5</div>
+    </div>
+  </div>
+</figure>
+
+<style>
+  .result {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--bg);
+  }
+
+  .result-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    padding: 0 8px 0 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--faint);
+    font: 500 12px/1.3 var(--mono);
+  }
+
+  .result-title {
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .result-bar code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .result-run {
+    display: none;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    height: 28px;
+    margin-left: auto;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font: 600 12.5px/1 var(--font);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .result-run svg {
+    width: 10px;
+    height: 10px;
+  }
+
+  .result-stage {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    min-height: 300px;
+    padding: 28px 20px;
+    background:
+      radial-gradient(60% 70% at 50% 40%, rgba(200, 255, 61, 0.07), transparent 70%),
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0 / 100% 28px,
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px) 0 0 / 28px 100%;
+  }
+
+  .shop {
+    display: grid;
+    gap: 12px;
+    width: min(100%, 260px);
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  }
+
+  .shop h3 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .field {
+    display: flex;
+    align-items: center;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--line-2);
+    border-radius: 12px;
+    background: var(--elevated);
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+  }
+
+  .buy {
+    display: grid;
+    place-items: center;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* The sandbox needs room for an editor next to a preview, and a script to fetch it. */
+  @media (min-width: 1000px) {
+    :global(.js) .result-run {
+      display: inline-flex;
+    }
+
+    :global([data-sandbox-state='loading']) .result-run {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    :global([data-sandbox-state='off']) .result-run,
+    :global([data-sandbox-state='failed']) .result-run {
+      display: none;
+    }
+  }
+</style>

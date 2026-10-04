@@ -1,0 +1,114 @@
+---
+import Site from '../layouts/Site.astro';
+import { href } from '../lib/paths';
+---
+
+<Site
+  title="Playground"
+  description="Edit a .nexus component in the browser and watch it run: the real compiler and runtime, with a mock in place of the game."
+  image="playground"
+  bare
+>
+  <section class="play">
+    <div class="play-head">
+      <h1>Playground</h1>
+      <p>
+        Edit a component and watch it run. It is compiled in your browser with the real compiler, and a mock stands in for the game.
+        Types are removed here, not checked: <a href={href('/docs/cli/#nexus-check')}><code>nexus check</code></a> does that in a
+        resource.
+      </p>
+    </div>
+    <div class="play-stage" data-sandbox={href('/sandbox/playground.js')} data-height="calc(100vh - 190px)">
+      <p class="play-wait play-loading">Loading the sandbox.</p>
+      <p class="play-wait play-failed">
+        The sandbox could not be loaded. The <a href={href('/docs/guide/')}>guide</a> shows the same steps in a resource of your own.
+      </p>
+      <noscript><p class="play-wait">The playground needs JavaScript. The <a href={href('/docs/guide/')}>guide</a> does not.</p></noscript>
+    </div>
+  </section>
+</Site>
+
+<script is:inline type="module" src={href('/sandbox-loader.js')}></script>
+
+<style>
+  /* One column that never grows past the window, whatever the sandbox holds. */
+  .play {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: 18px 20px 28px;
+  }
+
+  .play-head {
+    display: grid;
+    gap: 6px;
+  }
+
+  h1 {
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .play-head p {
+    max-width: 78ch;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .play a {
+    color: var(--ink);
+    text-decoration-color: rgba(200, 255, 61, 0.5);
+    text-underline-offset: 3px;
+  }
+
+  .play a:hover {
+    color: var(--accent);
+  }
+
+  .play code {
+    font-size: 0.92em;
+  }
+
+  .play-stage {
+    min-height: 420px;
+  }
+
+  .play-stage:not([data-sandbox-state='live']) {
+    display: grid;
+    place-items: center;
+    min-height: min(640px, calc(100vh - 190px));
+    border: 1px solid var(--line-2);
+    border-radius: 18px;
+    background: var(--surface);
+  }
+
+  .play-wait {
+    padding: 0 20px;
+    color: var(--faint);
+    font-size: 14.5px;
+    text-align: center;
+  }
+
+  .play-failed,
+  .play-stage[data-sandbox-state='failed'] .play-loading {
+    display: none;
+  }
+
+  .play-stage[data-sandbox-state='failed'] .play-failed {
+    display: block;
+  }
+
+  @media (min-width: 760px) {
+    .play {
+      padding: 22px 32px 32px;
+    }
+
+    .play-head {
+      grid-template-columns: auto 1fr;
+      align-items: baseline;
+      gap: 18px;
+    }
+  }
+</style>

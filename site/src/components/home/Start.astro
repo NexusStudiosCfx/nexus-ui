@@ -1,0 +1,30 @@
+---
+/** The closing call to action: the command, and where to go next. */
+import GitHubIcon from '../GitHubIcon.astro';
+import Install from '../Install.astro';
+import { href } from '../../lib/paths';
+import { SITE } from '../../../site.config.mjs';
+---
+
+<section class="section start" id="start">
+  <div class="wrap">
+    <div class="start-card reveal">
+      <div class="start-glow" aria-hidden="true"></div>
+      <h2>Start with one command</h2>
+      <p>
+        It creates a complete resource: one screen, one call with its server handler, a mock and a locale. Then
+        <code class="ic">npm run dev</code> opens it in a browser.
+      </p>
+      <Install />
+      <div class="start-links">
+        <a class="btn btn-primary btn-lg" href={href('/docs/guide/')}>Read the guide</a>
+        <a class="btn btn-ghost btn-lg" href={href('/playground/')}>Open the playground</a>
+        <a class="btn btn-ghost btn-lg" href={SITE.repository} rel="noopener"><GitHubIcon /> GitHub</a>
+      </div>
+      <p class="start-note">
+        Needs Node.js 20 or newer, and <code class="ic">lua54 'yes'</code> in the resource. To add it to a resource that exists
+        already: <code class="ic">{SITE.add}</code>.
+      </p>
+    </div>
+  </div>
+</section>

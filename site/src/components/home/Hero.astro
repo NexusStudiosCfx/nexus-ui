@@ -1,0 +1,90 @@
+---
+import Code from '../Code.astro';
+import GitHubIcon from '../GitHubIcon.astro';
+import Install from '../Install.astro';
+import ShopResult from './ShopResult.astro';
+import { href } from '../../lib/paths';
+import { VERSION } from '../../lib/project';
+import { shop } from '../../samples/hero';
+import { SITE } from '../../../site.config.mjs';
+
+const FACTS = ['Standalone Lua', 'Next to ESX, QBCore or Qbox', 'Apps for LB Phone and LB Tablet', 'Built for Chromium 103'];
+
+const NOTES = [
+  {
+    term: 'signal',
+    text: 'A value the template follows. When it changes, the one node that shows it changes, and nothing else runs.',
+  },
+  {
+    term: 'nui.call',
+    text: 'Typed by the contract. The server validates the input and applies the rate limit before your handler runs.',
+  },
+  {
+    term: '<screen>',
+    text: 'Focus and Escape, declared in the file. No Lua calls SetNuiFocus.',
+  },
+];
+---
+
+<section class="hero">
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-grid" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <a class="pill intro" href={href('/docs/changelog/')} style="--i:0">
+      <b>v{VERSION}</b> Open source under the MIT licence
+    </a>
+    <h1 class="intro" style="--i:1">A UI framework <span class="accent">built for FiveM</span> resources.</h1>
+    <p class="lead intro" style="--i:2">
+      Write screens in <code class="ic">.nexus</code> files and declare every message between the page and Lua once. The page costs
+      nothing while it is closed, and the server only sees input it has already validated.
+    </p>
+    <div class="hero-actions intro" style="--i:3">
+      <Install />
+      <div class="hero-links">
+        <a class="btn btn-primary btn-lg" href={href('/docs/guide/')}>Read the guide</a>
+        <a class="btn btn-ghost btn-lg" href={SITE.repository} rel="noopener"><GitHubIcon /> GitHub</a>
+      </div>
+    </div>
+    <ul class="hero-facts intro" style="--i:4" aria-label="At a glance">
+      {FACTS.map((fact) => <li>{fact}</li>)}
+    </ul>
+
+    <div
+      class="demo intro"
+      style="--i:5"
+      data-sandbox={href('/sandbox/playground.js')}
+      data-files={JSON.stringify(shop)}
+      data-sandbox-on="click"
+      data-height="560"
+      data-min-width="1000"
+      data-compact
+      data-fallback
+    >
+      <Code code={shop['Main.nexus']} lang="nexus" file="Main.nexus" class="demo-code" />
+      <ShopResult />
+    </div>
+    <p class="demo-hint">
+      <span class="demo-hint-run">
+        <b>Run it</b> swaps the picture for the sandbox: the real compiler and runtime in your browser, with a mock in place of
+        the game.
+      </span>
+      <span class="demo-hint-live">
+        This is live. Change the code, or ask for 500 and see the contract refuse it before the handler runs.
+      </span>
+      <a href={href('/playground/')}>Open the playground</a>
+    </p>
+
+    <dl class="notes">
+      {
+        NOTES.map((note) => (
+          <div class="reveal">
+            <dt>
+              <code>{note.term}</code>
+            </dt>
+            <dd>{note.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</section>

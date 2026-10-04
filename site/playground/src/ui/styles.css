@@ -1,0 +1,444 @@
+@import './stage.css';
+@import './log.css';
+
+:host {
+  all: initial;
+  display: block;
+}
+
+.nxp {
+  --base: #09090b;
+  --surface: #111113;
+  --card: #151518;
+  --raised: #1a1a1e;
+  --overlay: #202026;
+  --ink: #f5f5f5;
+  --muted: #a1a1aa;
+  --faint: #71717a;
+  --ghost: #52525b;
+  --accent: #c8ff3d;
+  --accent-ink: #0b1400;
+  --accent-soft: rgba(200, 255, 61, 0.12);
+  --accent-ring: rgba(200, 255, 61, 0.3);
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.1);
+  --positive: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --nxp-height: 640px;
+
+  font-variant-ligatures: none;
+
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  height: var(--nxp-height);
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 18px;
+  background: var(--surface);
+  color: var(--ink);
+  color-scheme: dark;
+  font: 500 13px/1.45 var(--font);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+
+.nxp.is-compact {
+  --nxp-height: 380px;
+  border-radius: 14px;
+}
+
+.nxp.is-narrow {
+  height: auto;
+}
+
+.nxp *,
+.nxp *::before,
+.nxp *::after {
+  box-sizing: border-box;
+}
+
+.nxp [hidden] {
+  display: none !important;
+}
+
+/* Without specificity, so that the class of a button decides how it looks. */
+:where(.nxp) button {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:where(.nxp) button:disabled {
+  cursor: default;
+}
+
+.nxp :focus-visible {
+  outline: 2px solid rgba(200, 255, 61, 0.6);
+  outline-offset: 1px;
+}
+
+.nxp ::selection {
+  background: rgba(200, 255, 61, 0.25);
+}
+
+.nxp ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.nxp ::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  background-clip: content-box;
+}
+
+.nxp ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+  background-clip: content-box;
+}
+
+.nxp ::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.nxp-spacer {
+  flex: 1;
+}
+
+.nxp-label {
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* The bar on top: examples on the left, actions on the right. */
+
+.nxp-bar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 12px;
+  height: 54px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.nxp-blurb {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nxp-button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  white-space: nowrap;
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+.nxp-button.is-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.nxp-button.is-primary:hover {
+  background: #d4ff66;
+}
+
+.nxp-button.is-secondary,
+.nxp-button.is-small {
+  border-color: var(--line-strong);
+  background: var(--raised);
+}
+
+.nxp-button.is-secondary:hover,
+.nxp-button.is-small:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--overlay);
+}
+
+.nxp-button.is-ghost {
+  color: var(--muted);
+}
+
+.nxp-button.is-ghost:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+}
+
+.nxp-button.is-small {
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.nxp-icon-button {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--faint);
+  transition:
+    background-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+.nxp-icon-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+.nxp-icon-button:disabled {
+  opacity: 0.4;
+}
+
+/* The menu of examples. */
+
+.nxp-menu {
+  position: relative;
+  flex: none;
+}
+
+.nxp-menu-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 34px;
+  padding: 0 10px 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--raised);
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease);
+}
+
+.nxp-menu-button:hover,
+.nxp-menu-button[aria-expanded='true'] {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: var(--overlay);
+}
+
+.nxp-menu-button svg {
+  color: var(--faint);
+  transition: transform 180ms var(--ease);
+}
+
+.nxp-menu-button[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.nxp-menu-title {
+  font-weight: 600;
+}
+
+.nxp-menu-list {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  gap: 2px;
+  width: 330px;
+  max-width: calc(100vw - 48px);
+  max-height: 520px;
+  padding: 6px;
+  overflow: auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--raised);
+  box-shadow: 0 18px 48px -12px rgba(0, 0, 0, 0.8);
+  animation: nxp-rise 180ms var(--ease);
+}
+
+.nxp-menu-item {
+  display: grid;
+  gap: 1px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  transition: background-color 150ms var(--ease);
+}
+
+.nxp-menu-item:hover,
+.nxp-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nxp-menu-item[aria-selected='true'] {
+  background: var(--accent-soft);
+}
+
+.nxp-menu-item[aria-selected='true'] .nxp-menu-item-title {
+  color: var(--accent);
+}
+
+.nxp-menu-item-title {
+  font-weight: 600;
+}
+
+.nxp-menu-item-text {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@keyframes nxp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* The two panes. */
+
+.nxp-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 11fr) minmax(0, 10fr);
+  min-height: 0;
+}
+
+.nxp-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.nxp-code {
+  border-right: 1px solid var(--line);
+}
+
+.nxp-run {
+  background: var(--base);
+}
+
+.nxp-tabbar,
+.nxp-run-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.nxp-run-head {
+  padding-left: 14px;
+  background: var(--surface);
+}
+
+.nxp-tabs {
+  display: flex;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.nxp-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.nxp-tab {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 12px;
+  transition:
+    background-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+.nxp-tab:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+}
+
+.nxp-tab.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nxp-toggle {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--raised);
+  color: var(--muted);
+  font-size: 12px;
+  transition:
+    background-color 160ms var(--ease),
+    border-color 160ms var(--ease),
+    color 160ms var(--ease);
+}
+
+.nxp-toggle:hover {
+  color: var(--ink);
+}
+
+.nxp-toggle[aria-pressed='true'] {
+  border-color: var(--accent-ring);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.nxp-editor {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.nxp-editor > .cm-editor {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}

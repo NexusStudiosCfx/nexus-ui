@@ -1,0 +1,108 @@
+---
+/**
+ * One of the sandbox's examples, running under a case. On a window wide enough for an editor
+ * next to a preview, its place is kept at the height the sandbox will have, and the sandbox is
+ * fetched when that place comes near the window. A narrower window gets the link alone.
+ */
+import { href } from '../../lib/paths';
+
+interface Props {
+  example: string;
+  height?: number;
+}
+
+const { example, height = 440 } = Astro.props;
+---
+
+<div class="live">
+  <p class="live-label">
+    <b>Live</b>
+    <slot />
+    <a href={href(`/playground/#example=${example}`)}>Open in the playground</a>
+  </p>
+  <div
+    class="live-slot"
+    style={`--height: ${height}px`}
+    data-sandbox={href('/sandbox/playground.js')}
+    data-example={example}
+    data-height={height}
+    data-min-width="1000"
+    data-compact
+    data-fallback
+  >
+    <button type="button" class="btn btn-ghost btn-sm" data-sandbox-run>Run it here</button>
+  </div>
+</div>
+
+<style>
+  .live {
+    display: grid;
+    gap: 12px;
+  }
+
+  .live-label {
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  .live-label b {
+    margin-right: 6px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font: 600 11px/1 var(--mono);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .live-label a {
+    margin-left: 6px;
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .live-label a::after {
+    content: ' \2192';
+  }
+
+  .live-label a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .live-slot {
+    display: none;
+  }
+
+  @media (min-width: 1000px) {
+    :global(.js) .live-slot {
+      display: block;
+      height: var(--height);
+    }
+
+    :global(.js) .live-slot:not([data-sandbox-state='live']) {
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line-2);
+      border-radius: 14px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 100% 28px,
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px) 0 0 / 28px 100%,
+        var(--code);
+    }
+
+    .live-slot[data-sandbox-state='loading'] button,
+    .live-slot[data-sandbox-state='off'] button,
+    .live-slot[data-sandbox-state='failed'] button {
+      display: none;
+    }
+
+    :global(.js) .live-slot[data-sandbox-state='off'],
+    :global(.js) .live-slot[data-sandbox-state='failed'] {
+      display: none;
+    }
+  }
+</style>

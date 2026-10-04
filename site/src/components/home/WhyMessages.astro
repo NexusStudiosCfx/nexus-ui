@@ -1,0 +1,70 @@
+---
+/** Why, cases 1 and 2: what crosses between the page, client Lua and the server. */
+import Case from './Case.astro';
+import Live from './Live.astro';
+import BridgeLog from './BridgeLog.astro';
+import Code from '../Code.astro';
+import Terminal from '../Terminal.astro';
+import { href } from '../../lib/paths';
+import * as sample from '../../samples/why-messages';
+
+const log = sample.refusals.map((line) => ({ kind: 'call' as const, name: 'shop:buy', ...line }));
+---
+
+<Case
+  id="why-types"
+  index={1}
+  title="A typo in a message is found in game"
+  todayEnds="Nothing fails until someone presses the button in game, and then nothing happens."
+  nexusEnds="Found before the game starts, with the file, the line and the fix."
+>
+  <Fragment slot="lead">
+    The page and Lua agree on message names and shapes by convention. With a contract, every message is declared once, and
+    <code class="ic">nui</code> is typed from it: a wrong name, a missing key or a misspelt field is a type error.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.typoPage} lang="js" file="web/app.js" tone="bad" marks={[{ text: 'ammount', tone: 'bad' }]} />
+    <Code code={sample.typoLua} lang="lua" file="client/main.lua" tone="bad" marks={[{ text: 'data.amount)', tone: 'bad' }]} />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Code code={sample.contract} lang="ts" file="web/contract.ts" tone="good" lines={{ 8: 'good' }} />
+  </Fragment>
+  <Fragment slot="result">
+    <Terminal output={sample.typoCheck} />
+    <p class="case-note">
+      <code class="ic">nexus check</code> reports type errors at their line in the <code class="ic">.nexus</code> file. In a
+      <code class="ic">.ts</code> module the editor shows them as you type. There is no language server for
+      <code class="ic">.nexus</code> files yet: see the <a href={href('/docs/roadmap/')}>roadmap</a>.
+    </p>
+  </Fragment>
+</Case>
+
+<Case
+  id="why-server"
+  index={2}
+  title="A server event trusts whatever arrives"
+  todayEnds="The handler runs with whatever arrived: here, a negative price."
+  nexusEnds="Refused before the handler runs. The caller is told why."
+>
+  <Fragment slot="lead">
+    A player controls their own client and can trigger any server event with any value. The contract becomes plain Lua
+    validators and a rate limit that run on the server before your handler does.
+  </Fragment>
+  <Fragment slot="today">
+    <Code code={sample.eventServer} lang="lua" file="server/main.lua" tone="bad" lines={{ 6: 'bad' }} />
+    <Code code={sample.eventAttack} lang="lua" file="an injected script" tone="bad" marks={[{ text: '-1000', tone: 'bad' }]} />
+  </Fragment>
+  <Fragment slot="nexus">
+    <Code code={sample.validator} lang="lua" file="nexus/contract.lua" note="generated" tone="good" lines={{ 18: 'good', 19: 'good', 20: 'good' }} />
+    <Code code={sample.handler} lang="lua" file="server/main.lua" tone="good" />
+  </Fragment>
+  <Fragment slot="result">
+    <BridgeLog lines={log} caption="What each caller gets back" />
+    <Live example="call">Buy more than the balance allows, or click faster than the rate limit: the call is refused.</Live>
+    <p class="case-note">
+      The lines are from the bridge log of <code class="ic">nexus dev</code>, where the mock refuses with the codes and messages
+      of the server. The contract checks shape, range and rate. Whether this player may buy this item is still for the handler to
+      decide, from what the server knows: see the <a href={href('/docs/bridge/#security-model')}>security model</a>.
+    </p>
+  </Fragment>
+</Case>

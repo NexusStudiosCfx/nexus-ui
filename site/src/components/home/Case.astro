@@ -1,0 +1,54 @@
+---
+/**
+ * One reason for the framework, as a before and after: what a resource author writes today,
+ * what it becomes, and what each ends in.
+ */
+interface Props {
+  id: string;
+  index: number;
+  title: string;
+  /** How the code of today ends. */
+  todayEnds: string;
+  /** How the same thing ends with the framework. */
+  nexusEnds: string;
+}
+
+const { id, index, title, todayEnds, nexusEnds } = Astro.props;
+---
+
+<article class="case" id={id}>
+  <header class="case-head reveal">
+    <span class="case-n" aria-hidden="true">{String(index).padStart(2, '0')}</span>
+    <div>
+      <h3>{title}</h3>
+      <p><slot name="lead" /></p>
+    </div>
+  </header>
+
+  <div class="case-cols">
+    <section class="case-col reveal" aria-label="Today">
+      <h4 class="case-tag is-today"><i></i>Today</h4>
+      <slot name="today" />
+      <p class="case-ends is-today">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+        <span>{todayEnds}</span>
+      </p>
+    </section>
+    <section class="case-col reveal" aria-label="With Nexus UI">
+      <h4 class="case-tag is-nexus"><i></i>With Nexus UI</h4>
+      <slot name="nexus" />
+      <p class="case-ends is-nexus">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span>{nexusEnds}</span>
+      </p>
+    </section>
+  </div>
+
+  {
+    Astro.slots.has('result') && (
+      <div class="case-result reveal">
+        <slot name="result" />
+      </div>
+    )
+  }
+</article>

@@ -1,0 +1,23 @@
+---
+/** The output of a command, as a terminal shows it. */
+import { dedent, terminal } from '../lib/highlight';
+
+interface Props {
+  output: string;
+  title?: string;
+  class?: string;
+}
+
+const { output, title = 'Terminal', class: className } = Astro.props;
+const html = terminal(dedent(output));
+---
+
+<figure class:list={['code', 'term', className]}>
+  <figcaption class="code-bar">
+    <span class="term-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="code-file">{title}</span>
+  </figcaption>
+  <div class="code-body">
+    <pre tabindex="0"><code set:html={html} /></pre>
+  </div>
+</figure>
