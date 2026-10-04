@@ -422,6 +422,24 @@ its own documentation.
   each time it is opened. LB Phone keeps an app it has put in the background. Keep what must
   survive in state or on the server, not in the component.
 
+An app that LB Phone kept in the background is not loaded again when the player returns to it,
+and the page is not told. To load fresh data on every return, let Lua say so through a state:
+
+```lua
+Nexus.onOpen('garageApp', function()
+    Nexus.set('app', { shown = GetGameTimer() })
+end)
+```
+
+```ts
+const app = nui.state('app');
+
+effect(() => {
+  app.shown;                 // run again each time LB shows the app
+  untrack(() => void load());
+});
+```
+
 `nexus check` and `nexus build` report an app screen that reads props, a surface that no Lua
 registers, and a `Nexus.app` for a surface no screen declares. See
 [`nexus check`](cli.md#nexus-check).
