@@ -75,7 +75,7 @@ A problem in `web/contract.ts` is printed in the terminal each time the file is 
 
 The server stops with whatever started it. When `npm run dev` is ended from outside, by a task
 runner or a closed editor, Windows ends npm and leaves its children running. `nexus dev` watches
-the processes above it and exits when one of them is gone, so the port is free again.
+the five processes above it and exits when one of them is gone, so the port is free again.
 
 | Option | |
 |---|---|

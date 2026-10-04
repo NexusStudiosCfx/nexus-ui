@@ -311,7 +311,9 @@ Nexus.set(-1, 'weather', { kind = 'rain' })                       -- or for ever
 Nexus.unset(source, 'job', 'grade')                               -- removes keys
 ```
 
-A handler may wait (`Wait`, a database query). A call has one handler.
+A handler may wait (`Wait`, a database query). A call has one handler. The handler of a call
+without `output` returns nothing: in dev mode, anything it returns is refused like any other
+answer that does not match.
 
 `Nexus.set` on the server reaches the player's client, which applies the patch as its own
 `Nexus.set` would: it compares, and only what changed reaches the page. The server keeps no copy
@@ -439,6 +441,9 @@ effect(() => {
   untrack(() => void load());
 });
 ```
+
+The same goes for an app that is put away: its frame may stay, with its timers running. Stop
+them from `Nexus.onClose` the same way, with a state the page watches.
 
 `nexus check` and `nexus build` report an app screen that reads props, a surface that no Lua
 registers, and a `Nexus.app` for a surface no screen declares. See

@@ -30,6 +30,8 @@ code: a feature is either in and documented, or it is on this page.
 - **No tuples and no recursive schemas.** A list has one item schema, and a schema cannot
   contain itself. `s.json` takes data of unknown shape, within a size and a depth.
 - **No minimum for records**, only a maximum. Arrays have both.
+- **`nui.state` is typed as if every key were set.** A key reads as `undefined` until Lua sets
+  it, which the type does not say.
 - **The details of a refusal are not typed on `NuiError`.** `error.details` is `unknown`, and the
   declared type is read from the generated `NexusContract`. See [Refusals](bridge.md#refusals).
 - **Patterns are a subset of regular expressions**: no groups, alternatives, negated classes or

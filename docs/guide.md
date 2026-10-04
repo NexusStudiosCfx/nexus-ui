@@ -404,7 +404,7 @@ What changes for an app:
   Leave room at the top for the status bar.
 - The icon is a file the resource ships. Put it in `web/public` and it is built to `web/dist`.
 
-With an app in the project, the bar of `npm run dev` gains a `phone` or `tablet` button. It
+With an app in the project, the bar of `npm run dev` gains a `phone app` or `tablet app` button. It
 shows the app in a frame of the device's size, next to the screens, fed by the same mock. The
 reference is [Surfaces](bridge.md#surfaces).
 

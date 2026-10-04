@@ -10,5 +10,7 @@ import { fileURLToPath } from 'node:url';
 const [links, command, ...args] = process.argv.slice(2);
 const next = Number(links) > 1 ? [fileURLToPath(import.meta.url), String(Number(links) - 1), command, ...args] : [command, ...args];
 
-const child = spawn(process.execPath, next, { stdio: 'inherit' });
+// Detached, because Node ends its own children when it dies on Windows, and a shell does not.
+// The links stand for shells: ending one must leave the ones below it running.
+const child = spawn(process.execPath, next, { stdio: 'inherit', detached: true, windowsHide: true });
 child.on('exit', (code) => process.exit(code ?? 0));

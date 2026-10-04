@@ -390,24 +390,33 @@ describe('the nexus command line', { timeout: 120000 }, () => {
           socket.once('error', () => resolve(false));
         });
 
-      // Two processes stand between this test and the dev server, as a shell and npm do.
-      const first = spawn(process.execPath, [join(REPO, 'tests/support/chain.mjs'), '2', CLI, 'dev', '--port', '5389'], {
-        cwd: workPath('my_shop'),
-        env: { ...process.env, NO_COLOR: '1' },
-      });
-      await waitForOutput(first, 'is running at');
-      expect(await listening(5389)).toBe(true);
+      // Processes stand between this test and the dev server: two, as a shell and npm do, and
+      // four, as when a task runner starts npm through a shim.
+      for (const [links, port] of [
+        ['2', 5389],
+        ['4', 5393],
+      ] as const) {
+        const first = spawn(process.execPath, [join(REPO, 'tests/support/chain.mjs'), links, CLI, 'dev', '--port', String(port)], {
+          cwd: workPath('my_shop'),
+          env: { ...process.env, NO_COLOR: '1' },
+        });
+        await waitForOutput(first, 'is running at');
+        expect(await listening(port)).toBe(true);
+        // The server looks up the processes above it once, which takes a few seconds on Windows.
+        // One that is gone by then counts as left behind on purpose, so the test waits that out.
+        await new Promise((resolve) => setTimeout(resolve, 10000));
 
-      // Ending the first leaves the others running on Windows. The server has to notice.
-      const exited = new Promise((resolve) => first.once('exit', resolve));
-      first.kill();
-      await exited;
-      let open = true;
-      for (let attempt = 0; attempt < 40 && open; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        open = await listening(5389);
+        // Ending the first leaves the others running on Windows. The server has to notice.
+        const exited = new Promise((resolve) => first.once('exit', resolve));
+        first.kill();
+        await exited;
+        let open = true;
+        for (let attempt = 0; attempt < 40 && open; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+          open = await listening(port);
+        }
+        expect(open, `${links} processes above the server`).toBe(false);
       }
-      expect(open).toBe(false);
     });
 
     it('says what to do when the port is taken', async () => {

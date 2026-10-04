@@ -1,7 +1,10 @@
 import { execFile } from 'node:child_process';
 
-/** How many processes up the tree are watched: the shell of the npm script, npm, and what started npm. */
-const LEVELS = 3;
+/**
+ * How many processes up the tree are watched. The shell of the npm script, npm and the shim that
+ * started npm are three already, and what ends is often the shell or the task runner above them.
+ */
+const LEVELS = 5;
 
 function alive(pid: number): boolean {
   try {
