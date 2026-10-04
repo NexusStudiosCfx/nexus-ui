@@ -127,6 +127,10 @@ languages.
 
 ![The same example with its LB Phone app shown in the dev frame](docs/media/garage-phone.png)
 
+[Nexus Shop](https://github.com/NexusStudiosCfx/nexus_shop) is a second example, in a repository
+of its own: a store clerk, an ox_target option and a basket with ox_inventory items, paid in cash
+or by card. Its release has a zip that runs as it is.
+
 `editor/vscode` is a VS Code extension with syntax highlighting and snippets for `.nexus` files.
 
 ## License
