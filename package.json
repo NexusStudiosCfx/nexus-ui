@@ -1,13 +1,13 @@
 {
   "name": "@nexusstudios/ui",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A UI framework for FiveM: .nexus components, a typed bridge to Lua, and screens that cost nothing while closed.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/NexusStudiosCfx/nexus-ui.git"
   },
-  "homepage": "https://github.com/NexusStudiosCfx/nexus-ui",
+  "homepage": "https://nexusstudios-ui.vercel.app",
   "bugs": {
     "url": "https://github.com/NexusStudiosCfx/nexus-ui/issues"
   },
@@ -22,6 +22,10 @@
     ".": {
       "types": "./dist/runtime/index.d.ts",
       "default": "./dist/runtime/index.js"
+    },
+    "./world": {
+      "types": "./dist/runtime/world.d.ts",
+      "default": "./dist/runtime/world.js"
     },
     "./compiler": {
       "types": "./dist/compiler/index.d.ts",

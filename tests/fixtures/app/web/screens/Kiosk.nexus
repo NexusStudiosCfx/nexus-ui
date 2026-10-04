@@ -1,0 +1,52 @@
+---
+import { signal, nui, env, onKey, t, NuiError } from 'nexus';
+
+const name = signal('');
+const amount = signal(0);
+const notes = signal('');
+const log = signal<string[]>([]);
+const pushed = signal(0);
+const result = signal('');
+const garage = nui.state('garage');
+const note = (entry: string): void => void (log.value = [...log.value, entry]);
+
+onKey('Enter', () => note('enter'));
+onKey('Escape', () => note('escape'));
+onKey('e', () => note('e'));
+nui.on('garage:changed', () => pushed.value++);
+
+async function list() {
+  try {
+    result.value = JSON.stringify(await nui.call('garage:list', { owner: 'me' }));
+  } catch (error) {
+    result.value = error instanceof NuiError ? `failed:${error.code}` : String(error);
+  }
+}
+---
+
+<screen surface="world" size="800x600" />
+
+<main id="kiosk">
+  <h1 id="kiosk-title">{t('app.title')}</h1>
+  <p id="kiosk-env">{env.inGame}|{env.resource}</p>
+  <p id="kiosk-props">{props.business ?? 'no business'}</p>
+  <p id="kiosk-state">{garage.count ?? 'none'}</p>
+  <p id="kiosk-pushed">{pushed}</p>
+  <p id="kiosk-result">{result}</p>
+  <p id="kiosk-log">{log.value.join(',')}</p>
+  <form on:submit|prevent={() => note(`submit:${name.value}`)}>
+    <input id="kiosk-name" bind:value={name} maxlength="12">
+  </form>
+  <input id="kiosk-amount" type="number" bind:value={amount}>
+  <textarea id="kiosk-notes" bind:value={notes}></textarea>
+  <input id="kiosk-agree" type="checkbox">
+  <button id="kiosk-list" on:click={list}>List</button>
+  <button id="kiosk-count" on:click={() => note('count')}>Count</button>
+  <p id="kiosk-values">{name}|{amount}|{notes}</p>
+</main>
+
+<style>
+  main { position: absolute; left: 0; top: 0; right: 0; bottom: 0; background: #111; color: #fff; }
+  input, textarea, button { display: block; width: 200px; height: 30px; margin: 4px; }
+  textarea { height: 60px; }
+</style>

@@ -1,14 +1,19 @@
 import { isRejection, patchOf, validate, type Contract, type Mock, type MockContext, type Rate, type Schema } from '../../contract';
 import type { NexusHost } from '../../runtime/env';
 
-/** Where a page of the resource runs: the game's own NUI page, or an app frame of LB. */
-export type Surface = 'main' | 'phone' | 'tablet';
+/**
+ * Where a page of the resource runs: the game's own NUI page, an app frame of LB, or the browser
+ * of a display, which is known here by the name of its world screen.
+ */
+export type Surface = 'main' | 'phone' | 'tablet' | `world:${string}`;
 
 export interface HostScreen {
   name: string;
   layer: 'screen' | 'hud';
-  /** Set for the screen that is the root of the app on that surface. */
-  surface?: 'phone' | 'tablet' | null;
+  /** Set for the screen that is the root of the app on that surface, and for a world screen. */
+  surface?: 'phone' | 'tablet' | 'world' | null;
+  /** The size of the browser that draws a world screen. */
+  size?: { width: number; height: number } | null;
 }
 
 export interface HostOptions {
@@ -35,10 +40,12 @@ export interface HostObserver {
 export interface Host {
   /** What the page's bridge talks to, to be installed as `window.__NEXUS_HOST__`. */
   bridge: NexusHost;
-  /** The same for the page inside the frame of an app. */
-  frame(surface: 'phone' | 'tablet'): NexusHost;
-  /** The frame of an app was closed, as when LB closes the app. */
-  closeFrame(surface: 'phone' | 'tablet'): void;
+  /** The same for the page inside the frame of an app or of a world screen. */
+  frame(surface: Exclude<Surface, 'main'>): NexusHost;
+  /** A frame was closed, as when LB closes the app or Lua destroys the display. */
+  closeFrame(surface: Exclude<Surface, 'main'>): void;
+  /** Sends a display what Lua sends it for the keyboard: a `type` or a `key` message. */
+  send(surface: Exclude<Surface, 'main'>, message: Record<string, unknown>): void;
   /** Opens a screen with these props, or with the ones `web/mock.ts` gives it. */
   open(name: string, props?: Record<string, unknown>): void;
   close(name: string): void;
@@ -62,23 +69,25 @@ function wire<T>(value: T): T {
  * and enforces the contract the way the Lua side does: unknown names, invalid data and calls
  * over the rate limit are refused with the same codes and the same messages.
  *
- * Like the client runtime it serves up to three pages: a call is answered to the page that made
- * it, and pushes, state and the locale go to every page that is up.
+ * Like the client runtime it serves the page of the resource, its apps and its displays: a call
+ * is answered to the page that made it, and pushes, state and the locale go to every page that
+ * is up.
  */
 export function createHost(options: HostOptions, observer: HostObserver): Host {
   const { contract, mock } = options;
   const definition = mock?.definition ?? {};
-  const pages: Record<Surface, { ready: boolean; listeners: Listener[] }> = {
-    main: { ready: false, listeners: [] },
-    phone: { ready: false, listeners: [] },
-    tablet: { ready: false, listeners: [] },
+  const pages = new Map<Surface, { ready: boolean; listeners: Listener[] }>();
+  const pageOf = (surface: Surface): { ready: boolean; listeners: Listener[] } => {
+    let page = pages.get(surface);
+    if (!page) pages.set(surface, (page = { ready: false, listeners: [] }));
+    return page;
   };
   const open = new Map<string, Record<string, unknown>>();
   const state: Record<string, Record<string, unknown>> = {};
   const windows = new Map<string, number[]>();
 
   const deliver = (surface: Surface, message: Message): void => {
-    const page = pages[surface];
+    const page = pageOf(surface);
     if (!page.ready) return;
     const delivered = wire({ __nexus: 1, ...message });
     // Messages from Lua arrive in a later task, never in the middle of the code that caused them.
@@ -86,7 +95,7 @@ export function createHost(options: HostOptions, observer: HostObserver): Host {
   };
 
   const broadcast = (message: Message): void => {
-    for (const surface of Object.keys(pages) as Surface[]) deliver(surface, message);
+    for (const surface of pages.keys()) deliver(surface, message);
   };
 
   const screen = (name: string): HostScreen | undefined => options.screens.find((entry) => entry.name === name);
@@ -94,6 +103,7 @@ export function createHost(options: HostOptions, observer: HostObserver): Host {
   const openScreen = (name: string, props?: Record<string, unknown>): void => {
     const found = screen(name);
     if (!found) throw new Error(`[nexus] there is no screen '${name}'. Screens are the .nexus files in web/screens.`);
+    if (found.surface === 'world') throw new Error(`[nexus] '${name}' is a world screen. Its frame shows it, as a display does in game.`);
     if (found.surface) throw new Error(`[nexus] '${name}' is the ${found.surface} app. Its frame opens it, as LB does in game.`);
     const next = props ?? definition.screens?.[name] ?? {};
     open.set(name, next);
@@ -236,10 +246,15 @@ export function createHost(options: HostOptions, observer: HostObserver): Host {
   };
 
   const onReady = (surface: Surface): void => {
-    pages[surface].ready = true;
+    pageOf(surface).ready = true;
     if (definition.locale) deliver(surface, { t: 'locale', data: definition.locale });
     for (const name of Object.keys(state)) {
       if (Object.keys(state[name] as object).length > 0) deliver(surface, { t: 'state', name, data: state[name] });
+    }
+    if (surface.startsWith('world:')) {
+      // A display shows one screen, which Lua opens with the props it was created with.
+      const name = surface.slice(6);
+      if (screen(name)?.surface === 'world') deliver(surface, { t: 'open', screen: name, props: definition.worlds?.[name]?.props ?? {} });
     }
     if (surface !== 'main') return;
     for (const [name, props] of open) deliver('main', { t: 'open', screen: name, props });
@@ -260,7 +275,7 @@ export function createHost(options: HostOptions, observer: HostObserver): Host {
     resource: options.resource,
     post: (message) => receive(surface, message),
     onMessage(listener) {
-      pages[surface].listeners.push(listener);
+      pageOf(surface).listeners.push(listener);
     },
     action: (label, run) => observer.action(label, run),
   });
@@ -273,8 +288,9 @@ export function createHost(options: HostOptions, observer: HostObserver): Host {
     bridge: bridgeFor('main'),
     frame: bridgeFor,
     closeFrame(surface) {
-      pages[surface] = { ready: false, listeners: [] };
+      pages.delete(surface);
     },
+    send: deliver,
     open: openScreen,
     close: closeScreen,
     isOpen: (name) => open.has(name),

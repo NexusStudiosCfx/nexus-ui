@@ -1,16 +1,28 @@
 export type AppSurface = 'phone' | 'tablet';
 
+/** A world screen, with the size of the browser that draws it in game. */
+export interface WorldFrame {
+  name: string;
+  width: number;
+  height: number;
+}
+
+/** What a frame is known by: the surface of an app, or `world:<screen>` for a world screen. */
+export type FrameId = AppSurface | `world:${string}`;
+
 export interface ToolbarOptions {
   resource: string;
   /** The screens of the game's own page. */
   screens: string[];
   /** The surfaces the resource has an app for. */
   apps: AppSurface[];
+  /** The world screens of the resource. */
+  worlds: WorldFrame[];
   hasMock: boolean;
   /** Opens the screen when it is closed and closes it when it is open. */
   toggle(name: string): void;
-  /** The frame of an app was shown or hidden. */
-  frameChanged(surface: AppSurface, shown: boolean): void;
+  /** The frame of an app or of a world screen was shown or hidden. */
+  frameChanged(frame: FrameId, shown: boolean): void;
 }
 
 export interface CallAnswer {
@@ -26,8 +38,8 @@ export interface Toolbar {
   addAction(label: string, run: () => void): () => void;
   /** Adds a line to the bridge log. `answer` and `ms` are given for calls. */
   log(kind: 'call' | 'push' | 'client' | 'state', name: string, data: unknown, answer?: CallAnswer, ms?: number): void;
-  /** Shows the frame of an app, as LB would when the player opens it. */
-  showFrame(surface: AppSurface): void;
+  /** Shows a frame: an app, as LB would when the player opens it, or a world screen, as a display would. */
+  showFrame(frame: FrameId): void;
 }
 
 const MAX_LINES = 100;
@@ -39,6 +51,20 @@ const FRAMES: Record<AppSurface, { width: number; height: number; fontSize: stri
 };
 
 const FRAMES_KEY = 'nexus-dev:frames';
+
+interface Frame {
+  width: number;
+  height: number;
+  /** Set for an app: the root font size LB gives its document. */
+  fontSize?: string;
+  title: string;
+  /** What the address of the page in the frame says about it. */
+  query: string;
+  /** How the box around the frame looks: a device, or the screen of a prop. */
+  look: string;
+  device: HTMLElement;
+  button: HTMLButtonElement;
+}
 
 // The host itself is the positioned box. With the position on something inside it, the host
 // would have no size, and a test that waits for the toolbar to be visible would wait forever.
@@ -88,6 +114,7 @@ button[aria-pressed="true"] { background: #c8ff3d; border-color: #c8ff3d; color:
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 80px rgba(0, 0, 0, 0.6);
 }
 .shell.phone { border-radius: 46px; }
+.shell.world { border-radius: 10px; }
 iframe { display: block; border: 0; background: #09090b; }
 `;
 
@@ -113,7 +140,7 @@ function toggleButton(label: string, title: string, onClick: () => void): HTMLBu
 }
 
 /**
- * The dev toolbar: one button per screen and per app, the buttons components add with
+ * The dev toolbar: one button per screen, per app and per world screen, the buttons components add with
  * `dev.action`, and a log of what crossed the bridge. It lives in a shadow root so that neither
  * its styles nor the page's can reach the other.
  */
@@ -138,16 +165,16 @@ export function createToolbar(options: ToolbarOptions): Toolbar {
     buttons.set(name, button);
     screens.append(button);
   }
-  if (options.screens.length === 0 && options.apps.length === 0) {
+  if (options.screens.length === 0 && options.apps.length === 0 && options.worlds.length === 0) {
     screens.append(element('span', 'hint', 'no screens: add a .nexus file to web/screens'));
   }
 
   const frames = element('div', 'frames');
-  const devices = new Map<AppSurface, { device: HTMLElement; button: HTMLButtonElement }>();
+  const devices = new Map<FrameId, Frame>();
 
   const remember = (): void => {
     try {
-      sessionStorage.setItem(FRAMES_KEY, JSON.stringify([...devices.keys()].filter((surface) => devices.get(surface)?.device.isConnected)));
+      sessionStorage.setItem(FRAMES_KEY, JSON.stringify([...devices.keys()].filter((id) => devices.get(id)?.device.isConnected)));
     } catch {
       // Without storage the frames are simply not restored after a reload.
     }
@@ -155,8 +182,7 @@ export function createToolbar(options: ToolbarOptions): Toolbar {
 
   /** Scales a frame down to fit a window that is smaller than the device. */
   const fit = (): void => {
-    for (const [surface, { device }] of devices) {
-      const { width, height } = FRAMES[surface];
+    for (const { device, width, height } of devices.values()) {
       const outer = { width: width + 20, height: height + 20 };
       const scale = Math.min(1, (innerHeight - 96) / outer.height, (innerWidth - 48) / outer.width);
       // The shell keeps the size of the device and is scaled as a whole. Its box in the layout
@@ -173,49 +199,67 @@ export function createToolbar(options: ToolbarOptions): Toolbar {
   };
   addEventListener('resize', fit);
 
-  const showFrame = (surface: AppSurface): void => {
-    const entry = devices.get(surface);
+  const showFrame = (id: FrameId): void => {
+    const entry = devices.get(id);
     if (!entry || entry.device.isConnected) return;
-    const { width, height, fontSize } = FRAMES[surface];
+    const { width, height, fontSize } = entry;
     const frame = element('iframe', '');
     frame.width = String(width);
     frame.height = String(height);
-    frame.title = `${options.resource} in LB ${surface === 'phone' ? 'Phone' : 'Tablet'}`;
-    frame.src = `${location.pathname}?surface=${surface}&resource=${encodeURIComponent(options.resource)}`;
+    frame.title = entry.title;
+    frame.src = `${location.pathname}?${entry.query}&resource=${encodeURIComponent(options.resource)}`;
     // What LB does to the document of an app once it has loaded.
-    frame.addEventListener('load', () => {
-      const page = frame.contentDocument;
-      if (!page) return;
-      page.documentElement.style.fontSize = fontSize;
-      page.body.dataset.device = surface;
-      page.body.dataset.theme = 'dark';
-    });
-    const shell = element('div', `shell ${surface}`);
+    if (fontSize) {
+      frame.addEventListener('load', () => {
+        const page = frame.contentDocument;
+        if (!page) return;
+        page.documentElement.style.fontSize = fontSize;
+        page.body.dataset.device = id;
+        page.body.dataset.theme = 'dark';
+      });
+    }
+    const shell = element('div', `shell ${entry.look}`);
     shell.append(frame);
     entry.device.replaceChildren(shell);
     frames.append(entry.device);
     entry.button.setAttribute('aria-pressed', 'true');
     fit();
     remember();
-    options.frameChanged(surface, true);
+    options.frameChanged(id, true);
   };
 
-  const hideFrame = (surface: AppSurface): void => {
-    const entry = devices.get(surface);
+  const hideFrame = (id: FrameId): void => {
+    const entry = devices.get(id);
     if (!entry?.device.isConnected) return;
     entry.device.remove();
     entry.button.setAttribute('aria-pressed', 'false');
     remember();
-    options.frameChanged(surface, false);
+    options.frameChanged(id, false);
   };
 
   const apps = element('div', 'group');
-  for (const surface of options.apps) {
-    const button = toggleButton(`${surface} app`, `Show or hide the app in a ${surface} frame`, () =>
-      devices.get(surface)?.device.isConnected ? hideFrame(surface) : showFrame(surface),
-    );
-    devices.set(surface, { device: element('div', 'device'), button });
+  const addFrame = (id: FrameId, label: string, hint: string, frame: Omit<Frame, 'device' | 'button'>): void => {
+    const button = toggleButton(label, hint, () => (devices.get(id)?.device.isConnected ? hideFrame(id) : showFrame(id)));
+    devices.set(id, { ...frame, device: element('div', 'device'), button });
     apps.append(button);
+  };
+  for (const surface of options.apps) {
+    addFrame(surface, `${surface} app`, `Show or hide the app in a ${surface} frame`, {
+      ...FRAMES[surface],
+      title: `${options.resource} in LB ${surface === 'phone' ? 'Phone' : 'Tablet'}`,
+      query: `surface=${surface}`,
+      look: surface,
+    });
+  }
+  // In dev a display is known by the name of its screen, where the game gives it a number.
+  for (const { name, width, height } of options.worlds) {
+    addFrame(`world:${name}`, name, `Show or hide the world screen '${name}' in a frame of its size, ${width} by ${height}`, {
+      width,
+      height,
+      title: `${options.resource}: the world screen ${name}`,
+      query: `surface=world&screen=${encodeURIComponent(name)}&display=${encodeURIComponent(name)}`,
+      look: 'world',
+    });
   }
 
   const actions = element('div', 'group');
@@ -281,11 +325,11 @@ export function createToolbar(options: ToolbarOptions): Toolbar {
   };
 }
 
-/** The app frames that were showing before a reload. */
-export function rememberedFrames(): AppSurface[] {
+/** The frames that were showing before a reload. One that no longer exists is not shown again. */
+export function rememberedFrames(): FrameId[] {
   try {
     const stored: unknown = JSON.parse(sessionStorage.getItem(FRAMES_KEY) ?? '[]');
-    return Array.isArray(stored) ? stored.filter((surface): surface is AppSurface => surface === 'phone' || surface === 'tablet') : [];
+    return Array.isArray(stored) ? stored.filter((id): id is FrameId => typeof id === 'string') : [];
   } catch {
     return [];
   }

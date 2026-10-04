@@ -235,6 +235,17 @@ NexusScreens = {
     expect(code).toContain("garageApp = { layer = 'screen', mouse = false, keyboard = false, keepInput = false, escape = false, surface = 'phone' },");
   });
 
+  it('gives a world screen the size of its browser, which is what Lua creates it with', () => {
+    const code = generateScreensLua([
+      {
+        name: 'clock',
+        file: 'web/screens/Clock.nexus',
+        declaration: { focus: { mouse: false, keyboard: false }, keepInput: false, close: 'none', size: { width: 1280, height: 720 }, layer: 'screen', cursor: null, surface: 'world' },
+      },
+    ]);
+    expect(code).toContain("clock = { layer = 'screen', mouse = false, keyboard = false, keepInput = false, escape = false, surface = 'world', width = 1280, height = 720 },");
+  });
+
   it('writes an empty table for a project without screens', () => {
     expect(generateScreensLua([])).toContain('NexusScreens = {}\n');
   });

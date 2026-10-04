@@ -1,6 +1,6 @@
 {
   "name": "create-nexus-ui",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Start a FiveM resource with Nexus UI: npm create nexus-ui my_shop",
   "license": "MIT",
   "type": "module",
@@ -18,7 +18,7 @@
     "url": "git+https://github.com/NexusStudiosCfx/nexus-ui.git",
     "directory": "packages/create-nexus-ui"
   },
-  "homepage": "https://github.com/NexusStudiosCfx/nexus-ui",
+  "homepage": "https://nexusstudios-ui.vercel.app",
   "bugs": {
     "url": "https://github.com/NexusStudiosCfx/nexus-ui/issues"
   },

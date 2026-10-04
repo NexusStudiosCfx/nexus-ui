@@ -14,6 +14,8 @@ export interface PackagePaths {
   runtime: string;
   /** The module `nexus/contract` stands for. */
   contract: string;
+  /** The module `nexus/world` stands for: what a page needs for world screens. */
+  world: string;
   /** True when the plugin runs from the TypeScript sources of this package, as its tests do. */
   fromSource: boolean;
 }
@@ -24,8 +26,8 @@ export function packagePaths(): PackagePaths {
   const fromSource = /[\\/]src[\\/]vite$/.test(folder);
   while (!existsSync(join(folder, 'package.json'))) folder = dirname(folder);
   return fromSource
-    ? { runtime: join(folder, 'src/runtime/index.ts'), contract: join(folder, 'src/contract/index.ts'), fromSource }
-    : { runtime: join(folder, 'dist/runtime/index.js'), contract: join(folder, 'dist/contract/index.js'), fromSource };
+    ? { runtime: join(folder, 'src/runtime/index.ts'), contract: join(folder, 'src/contract/index.ts'), world: join(folder, 'src/runtime/world.ts'), fromSource }
+    : { runtime: join(folder, 'dist/runtime/index.js'), contract: join(folder, 'dist/contract/index.js'), world: join(folder, 'dist/runtime/world.js'), fromSource };
 }
 
 /**

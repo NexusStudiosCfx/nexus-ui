@@ -17,12 +17,14 @@ export interface ScreenDeclaration {
   /** CSS cursor shown over the screen. */
   cursor: string | null;
   /**
-   * The screen is the root of an app in LB Phone or LB Tablet instead of a screen of the game's
-   * own page. Such a screen has no focus, no Escape, no size and no layer: its frame belongs to LB.
+   * Where the screen is shown when that is not the game's own page. `phone` and `tablet`: it is
+   * the root of an app in LB Phone or LB Tablet, and has no focus, no Escape, no size and no
+   * layer, because its frame belongs to LB. `world`: it is drawn on a prop by a browser of its
+   * `size`, and has no focus, no Escape and no layer, because nobody uses it until Lua says so.
    * The compiler always sets it, to null for an ordinary screen. It is optional so that a
    * declaration written by hand before surfaces existed is still a valid one.
    */
-  surface?: 'phone' | 'tablet' | null;
+  surface?: 'phone' | 'tablet' | 'world' | null;
 }
 
 const ATTRIBUTES = ['focus', 'keep-input', 'close', 'size', 'layer', 'cursor', 'surface'];
@@ -35,6 +37,16 @@ const NOT_ON_SURFACE: Record<string, string> = {
   size: 'is sized',
   layer: 'is stacked',
 };
+
+// What a screen on a prop cannot say: the game's page has the focus, not the prop.
+const NOT_IN_WORLD: Record<string, string> = {
+  focus: 'It takes no focus: the player uses it through `Nexus.operate`.',
+  'keep-input': 'It takes no focus: the player uses it through `Nexus.operate`.',
+  close: 'Nothing closes it from the page: Lua destroys its display.',
+  layer: 'It is not stacked with the screens of the page.',
+};
+
+const SURFACES = '`phone`, `tablet` or `world`';
 
 export function analyseScreen(tag: ScreenTag, reporter: Reporter): ScreenDeclaration {
   const given = new Map<string, { text: string | null; attribute: Attribute }>();
@@ -71,9 +83,10 @@ export function analyseScreen(tag: ScreenTag, reporter: Reporter): ScreenDeclara
     return entry.text || invalid(name, expected);
   };
 
-  const surface = text('surface', '`phone` or `tablet`');
+  const surface = text('surface', SURFACES);
+  if (surface === 'world') return analyseWorld(given, text, invalid, tag, reporter);
   if (surface !== undefined) {
-    if (surface !== 'phone' && surface !== 'tablet') invalid('surface', '`phone` or `tablet`');
+    if (surface !== 'phone' && surface !== 'tablet') invalid('surface', SURFACES);
     for (const [name, { attribute }] of given) {
       const decided = NOT_ON_SURFACE[name];
       if (decided) {
@@ -128,23 +141,61 @@ export function analyseScreen(tag: ScreenTag, reporter: Reporter): ScreenDeclara
   const closeText = text('close', '`escape` or `none`');
   if (closeText !== undefined && closeText !== 'escape' && closeText !== 'none') invalid('close', '`escape` or `none`');
 
-  let size: ScreenDeclaration['size'] = null;
-  const sizeText = text('size', 'a width and a height in pixels');
-  if (sizeText !== undefined) {
-    const match = /^(\d+)x(\d+)$/.exec(sizeText);
-    if (!match || !+(match[1] as string) || !+(match[2] as string)) invalid('size', 'a width and a height in pixels');
-    else size = { width: +(match[1] as string), height: +(match[2] as string) };
-  }
-
   return {
     focus,
     keepInput: !!keepInput,
     // Without a way out a player with keyboard focus would be stuck, so Escape closes by default.
     close: closeText === 'escape' || closeText === 'none' ? closeText : focus.keyboard ? 'escape' : 'none',
-    size,
+    size: readSize(text, invalid),
     layer,
     cursor: text('cursor', 'a CSS cursor') ?? null,
     surface: null,
+  };
+}
+
+type Given = Map<string, { text: string | null; attribute: Attribute }>;
+type ReadText = (name: string, expected: string) => string | undefined;
+type Invalid = (name: string, expected: string) => never;
+
+function readSize(text: ReadText, invalid: Invalid): ScreenDeclaration['size'] {
+  const sizeText = text('size', 'a width and a height in pixels');
+  if (sizeText === undefined) return null;
+  const match = /^(\d+)x(\d+)$/.exec(sizeText);
+  if (!match || !+(match[1] as string) || !+(match[2] as string)) return invalid('size', 'a width and a height in pixels');
+  return { width: +(match[1] as string), height: +(match[2] as string) };
+}
+
+function analyseWorld(given: Given, text: ReadText, invalid: Invalid, tag: ScreenTag, reporter: Reporter): ScreenDeclaration {
+  for (const [name, { attribute }] of given) {
+    const reason = NOT_IN_WORLD[name];
+    if (reason) {
+      reporter.error({
+        code: 'surface-attribute',
+        message: `\`${name}\` has no meaning on a world screen, which is drawn on a prop. ${reason}`,
+        hint: `Remove \`${name}\`.`,
+        start: attribute.start,
+        end: attribute.end,
+      });
+    }
+  }
+  const size = readSize(text, invalid);
+  if (!size) {
+    reporter.error({
+      code: 'world-size',
+      message: 'A world screen needs a `size`: the resolution of the browser that draws it.',
+      hint: 'Add it, for example `<screen surface="world" size="1280x720" />`.',
+      start: tag.start,
+      end: tag.end,
+    });
+  }
+  return {
+    focus: { mouse: false, keyboard: false },
+    keepInput: false,
+    close: 'none',
+    size,
+    layer: 'screen',
+    cursor: text('cursor', 'a CSS cursor') ?? null,
+    surface: 'world',
   };
 }
 

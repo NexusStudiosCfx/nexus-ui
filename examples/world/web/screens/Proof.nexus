@@ -1,0 +1,164 @@
+---
+import { signal, computed, nui, onMount, after, every, NuiError } from 'nexus';
+
+type Verdict = 'wait' | 'pass' | 'fail';
+type Seen = 'pointer' | 'click' | 'wheel' | 'text' | 'key';
+
+// What /worldtest has found, set from Lua. The page adds what it can see for itself.
+const proof = nui.state('proof');
+// Lua opens the screen with its props. Without them the page mounted on its own, after
+// waiting in vain: nothing Lua sent has arrived.
+const opened = props.model !== undefined;
+
+const seen = signal<Seen[]>([]);
+const typed = signal('');
+const clicks = signal(0);
+const pointer = signal('not yet');
+const scrolled = signal(0);
+const time = signal('asking');
+const seconds = signal(0);
+const root = signal<HTMLElement | null>(null);
+const field = signal<HTMLInputElement | null>(null);
+const button = signal<HTMLButtonElement | null>(null);
+const list = signal<HTMLElement | null>(null);
+
+/** Tells Lua once what the page saw of each kind of input. */
+function saw(what: Seen, detail: string) {
+  if (seen.value.includes(what)) return;
+  seen.value = [...seen.value, what];
+  nui.client('worldtest:saw', { what, detail: detail.slice(0, 80) });
+}
+
+function moved(event: MouseEvent) {
+  pointer.value = `${event.clientX}, ${event.clientY}`;
+  saw('pointer', `at ${pointer.value}`);
+}
+
+let settle = () => {};
+function edited(event: Event) {
+  const now = (event.target as HTMLInputElement).value;
+  const shorter = now.length < typed.value.length;
+  typed.value = now;
+  if (shorter) return saw('key', `the field holds "${now}"`);
+  // A word arrives one character at a time. It is reported whole, once it has stopped growing.
+  settle();
+  settle = after(200, () => saw('text', `the field holds "${typed.value}"`));
+}
+
+function clicked() {
+  clicks.value++;
+  saw('click', `the button was clicked ${clicks.value} time(s)`);
+}
+
+function wheeled(event: WheelEvent) {
+  scrolled.value += event.deltaY;
+  saw('wheel', `the wheel turned by ${event.deltaY}`);
+}
+
+const verdict = (own: boolean, told: Verdict | undefined): Verdict => (own ? 'pass' : (told ?? 'wait'));
+const input = (what: Seen): Verdict => verdict(seen.value.includes(what), proof[what]);
+
+const rows = computed(() => [
+  { step: '1', label: 'The page loaded in its browser', state: 'pass' as Verdict },
+  { step: '2', label: 'The page reached Lua (NUI callback)', state: verdict(opened, proof.post) },
+  { step: '3', label: 'Lua reached the page (SendDuiMessage)', state: verdict(opened, proof.message) },
+  { step: '4', label: 'The picture is on the prop', state: 'pass' as Verdict },
+  { step: '5', label: 'The pointer moved', state: input('pointer') },
+  { step: '5', label: 'A click arrived', state: input('click') },
+  { step: '5', label: 'The wheel turned', state: input('wheel') },
+  { step: '5', label: 'Text was typed', state: input('text') },
+  { step: '5', label: 'A key was pressed', state: input('key') },
+]);
+
+nui.on('worldtest:ping', ({ nonce }) => nui.client('worldtest:pong', { nonce }));
+every(1000, () => seconds.value++);
+
+onMount(async () => {
+  // Places are measured against the screen itself, which is the whole picture of the display.
+  const screen = (root.value as Element).getBoundingClientRect();
+  const centre = (element: Element | null) => {
+    const box = (element as Element).getBoundingClientRect();
+    return { x: (box.left + box.width / 2 - screen.left) / screen.width, y: (box.top + box.height / 2 - screen.top) / screen.height };
+  };
+  nui.client('worldtest:hello', {
+    address: (location.origin + location.pathname).slice(0, 300),
+    opened,
+    field: centre(field.value),
+    button: centre(button.value),
+    list: centre(list.value),
+  });
+  try {
+    time.value = (await nui.call('worldtest:time')).time;
+  } catch (error) {
+    time.value = error instanceof NuiError ? `no answer (${error.code})` : 'no answer';
+  }
+});
+---
+
+<screen surface="world" size="1280x720" />
+
+<main class="proof" bind:this={root} on:mousemove={moved}>
+  <header>
+    <h1>World screen proof</h1>
+    <p>{props.model ?? 'opened without props'} · {props.txd ?? '?'} / {props.texture ?? '?'}</p>
+  </header>
+
+  <ul class="steps">
+    {#each rows.value as row (row.label)}
+      <li class={row.state}><span class="step">{row.step}</span>{row.label}<b>{row.state}</b></li>
+    {/each}
+  </ul>
+
+  <section class="try">
+    <input bind:this={field} on:input={edited} placeholder="Click here, then type" maxlength="40">
+    <button bind:this={button} on:click={clicked}>Click me: {clicks}</button>
+    <div class="list" bind:this={list} on:wheel={wheeled}>
+      {#each Array.from({ length: 30 }, (_, index) => index + 1) as line (line)}
+        <p>Line {line} of a list that scrolls</p>
+      {/each}
+    </div>
+    <dl>
+      <dt>Pointer</dt><dd>{pointer}</dd>
+      <dt>Server time</dt><dd>{time}</dd>
+      <dt>Alive for</dt><dd>{seconds} s</dd>
+    </dl>
+  </section>
+</main>
+
+<style>
+  .proof {
+    position: absolute; left: 0; top: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 30px 44px; overflow: hidden;
+    display: grid; grid-template: auto minmax(0, 1fr) / 1.1fr 1fr; gap: 18px 40px;
+    background: #09090b; color: #f4f4f5; font: 22px/1.3 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+  header { grid-column: 1 / 3; }
+  h1 { margin: 0; font-size: 40px; font-weight: 700; letter-spacing: -0.01em; }
+  header p { margin: 4px 0 0; color: #a1a1aa; }
+
+  .steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .steps li {
+    display: flex; align-items: center; gap: 14px; padding: 8px 16px; white-space: nowrap;
+    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; background: #18181b;
+  }
+  .step { flex: none; width: 30px; color: #71717a; font-weight: 700; }
+  .steps b { margin-left: auto; text-transform: uppercase; font-size: 17px; letter-spacing: 0.08em; color: #71717a; }
+  .steps .pass b { color: #c8ff3d; }
+  .steps .fail b { color: #f87171; }
+  .steps .fail { border-color: rgba(248, 113, 113, 0.5); }
+
+  .try { display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  input, button { font: inherit; color: inherit; border-radius: 12px; padding: 12px 18px; }
+  input { border: 1px solid rgba(255, 255, 255, 0.16); background: #18181b; outline: none; }
+  /* A display never has the focus of the game, so :focus alone would never show. */
+  input:focus, input[data-nexus-focus] { border-color: #c8ff3d; }
+  button { border: 0; background: #c8ff3d; color: #0b1400; font-weight: 700; }
+  button:hover { background: #d9ff7a; }
+  .list {
+    flex: 1; min-height: 0; overflow-y: scroll; padding: 6px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; background: #18181b; color: #a1a1aa;
+  }
+  .list p { margin: 8px 0; }
+  dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 18px; }
+  dt { color: #71717a; }
+  dd { margin: 0; }
+</style>

@@ -35,6 +35,7 @@ function hostPlugin(project: Project): Plugin {
         name: screen.name,
         layer: screen.declaration.layer,
         surface: screen.declaration.surface ?? null,
+        size: screen.declaration.surface === 'world' ? screen.declaration.size : null,
       }));
       return [
         `import { installHost } from ${JSON.stringify(fsUrl(join(packageRoot(), 'dist/cli/host.js')))};`,

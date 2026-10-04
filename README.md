@@ -65,6 +65,9 @@ end, false)
 - **Apps for LB Phone and LB Tablet.** A screen with `surface="phone"` or `surface="tablet"` is
   an app in LB's phone or tablet, served by the same build and the same contract. One line of
   Lua registers it.
+- **Screens on props.** A screen with `surface="world"` is drawn on a texture in the game world:
+  a monitor, a time clock, a kiosk. One line of Lua creates it, another lets the player use it
+  with the mouse and the keyboard.
 - **Tooling.** `nexus create` for a working resource, `nexus dev` for a browser with a mock in
   place of the game and hot reload, `nexus build` for Chromium 103, `nexus check` for types and
   for what FiveM's browser cannot run.
@@ -118,12 +121,13 @@ The same documents live in this repository:
 - [The `.nexus` format](docs/format.md): every block and directive.
 - [The bridge](docs/bridge.md): the contract, the Lua API, the security model, the wire format.
 - [The command line](docs/cli.md): `create`, `dev`, `build`, `check`.
-- [Roadmap](docs/roadmap.md): what version 0.2 does not do.
+- [Roadmap](docs/roadmap.md): what version 0.3 does not do.
 - [Changelog](CHANGELOG.md): what changed in each release.
 
 `examples/garage` is a complete resource: a garage menu with a list, a search and a purchase the
 server can refuse, a vehicle HUD, the same garage as an app in LB Phone, sounds and two
-languages.
+languages. `examples/world` is a small one: a screen on a prop, and a command that tests in
+game that every link between that screen and Lua holds.
 
 ![The same example with its LB Phone app shown in the dev frame](docs/media/garage-phone.png)
 

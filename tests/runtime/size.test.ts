@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -8,6 +8,7 @@ import { build, minifySync, parseSync } from 'vite';
 
 const runtime = resolve(fileURLToPath(import.meta.url), '../../../src/runtime');
 const entry = join(runtime, 'index.ts');
+const world = join(runtime, 'world.ts');
 const work = mkdtempSync(join(tmpdir(), 'nexus-ui-size-'));
 
 // The exports that make up the bridge. Everything else is "the runtime without the bridge".
@@ -28,9 +29,9 @@ function exportedValues(): string[] {
  * build does and returns the gzipped size. The minifier runs separately because a library build
  * keeps its whitespace.
  */
-async function gzipped(names: string[], file: string, also = ''): Promise<number> {
+async function gzipped(names: string[], file: string, also = '', from = entry): Promise<number> {
   const input = join(work, file);
-  writeFileSync(input, `export { ${names.join(', ')} } from ${JSON.stringify(pathToFileURL(entry).href)};\n${also}\n`);
+  writeFileSync(input, `export { ${names.join(', ')} } from ${JSON.stringify(pathToFileURL(from).href)};\n${also}\n`);
   const output = await build({
     configFile: false,
     logLevel: 'silent',
@@ -57,5 +58,15 @@ describe('runtime size', () => {
     expect(core).toBeLessThan(6 * 1024);
     expect(full).toBeLessThan(9 * 1024);
     expect(full).toBeGreaterThan(core);
+  }, 60000);
+
+  test('what world screens need is a module of its own, under 3 KB, that the runtime does not contain', async () => {
+    const size = await gzipped(['display', 'receive'], 'world.js', '', world);
+    console.info(`world screens: ${size} bytes (minified, gzipped), loaded by a display and by a page that forwards input`);
+    expect(size).toBeLessThan(3 * 1024);
+
+    // The runtime reaches it through the import its entry module is given, never by itself.
+    const sources = readdirSync(runtime).filter((name) => name.endsWith('.ts') && name !== 'world.ts');
+    for (const name of sources) expect(readFileSync(join(runtime, name), 'utf8')).not.toMatch(/from '\.\/world/);
   }, 60000);
 });

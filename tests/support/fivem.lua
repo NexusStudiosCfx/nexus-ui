@@ -14,6 +14,11 @@ Sim = {
     files = {},
     resources = {},
     exports = {},
+    metadata = {},
+    duis = {},
+    hidden = 0,
+    entities = {},
+    missingModels = {},
 }
 
 local function record(kind, fields)
@@ -109,6 +114,116 @@ function DisableControlAction(_, control)
     Sim.disabled[tostring(control)] = (Sim.disabled[tostring(control)] or 0) + 1
 end
 
+function DisableAllControlActions()
+    Sim.disabled.all = (Sim.disabled.all or 0) + 1
+end
+
+function HideHudAndRadarThisFrame()
+    Sim.hidden = Sim.hidden + 1
+end
+
+function GetResourceMetadata(_, key)
+    return Sim.metadata[key]
+end
+
+-- A DUI: an off-screen browser. Sim.duis holds the ones that exist, by handle.
+function CreateDui(url, width, height)
+    if Sim.noDui then return 0 end
+    Sim.lastDui = (Sim.lastDui or 100) + 1
+    local dui = Sim.lastDui
+    Sim.duis[dui] = true
+    record('createDui', { dui = json.encode(dui), url = json.encode(url), width = json.encode(width), height = json.encode(height) })
+    return dui
+end
+
+function GetDuiHandle(dui)
+    return 'handle:' .. dui
+end
+
+function IsDuiAvailable(dui)
+    return Sim.duis[dui] == true
+end
+
+function DestroyDui(dui)
+    Sim.duis[dui] = nil
+    record('destroyDui', { dui = json.encode(dui) })
+end
+
+function SendDuiMessage(dui, text)
+    record('duiMessage', { dui = json.encode(dui), message = text })
+end
+
+function SendDuiMouseMove(dui, x, y)
+    record('duiMouse', { dui = json.encode(dui), event = '"move"', args = encodeAll(x, y) })
+end
+
+function SendDuiMouseDown(dui, button)
+    record('duiMouse', { dui = json.encode(dui), event = '"down"', args = encodeAll(button) })
+end
+
+function SendDuiMouseUp(dui, button)
+    record('duiMouse', { dui = json.encode(dui), event = '"up"', args = encodeAll(button) })
+end
+
+function SendDuiMouseWheel(dui, deltaY, deltaX)
+    record('duiMouse', { dui = json.encode(dui), event = '"wheel"', args = encodeAll(deltaY, deltaX) })
+end
+
+function CreateRuntimeTxd(name)
+    return 'txd:' .. name
+end
+
+function CreateRuntimeTextureFromDuiHandle(txd, name, handle)
+    record('runtimeTexture', { txd = json.encode(txd), name = json.encode(name), handle = json.encode(handle) })
+    return 1
+end
+
+function AddReplaceTexture(txd, texture, newTxd, newTexture)
+    record('replaceTexture', { txd = json.encode(txd), texture = json.encode(texture), with = encodeAll(newTxd, newTexture) })
+end
+
+function RemoveReplaceTexture(txd, texture)
+    record('restoreTexture', { txd = json.encode(txd), texture = json.encode(texture) })
+end
+
+-- A scripted camera. An entity that was not created stands at its own number on every axis,
+-- so an offset shows.
+function GetOffsetFromEntityInWorldCoords(entity, x, y, z)
+    local at = GetEntityCoords(entity)
+    return { x = at.x + x, y = at.y + y, z = at.z + z }
+end
+
+-- The view of the tests looks along Y: a point a metre to the side of entity 100 is a whole
+-- window to the side of its middle, and a metre up is a whole window up.
+function GetScreenCoordFromWorldCoord(x, y, z)
+    return true, 0.5 + (x - 100), 0.5 - (z - 100)
+end
+
+function CreateCam(name)
+    record('camera', { call = '"create"', args = encodeAll(name) })
+    return 7
+end
+
+function SetCamCoord(_, x, y, z)
+    record('camera', { call = '"coord"', args = encodeAll(x, y, z) })
+end
+
+function PointCamAtCoord(_, x, y, z)
+    record('camera', { call = '"point"', args = encodeAll(x, y, z) })
+end
+
+function SetCamFov(_, fov)
+    record('camera', { call = '"fov"', args = encodeAll(fov) })
+end
+
+function RenderScriptCams(render, ease, time)
+    record('camera', { call = '"render"', args = encodeAll(render, ease, time) })
+end
+
+function DestroyCam(camera)
+    record('camera', { call = '"destroy"', args = encodeAll(camera) })
+end
+
 -- FiveM starts a new thread on the next tick, not inside CreateThread.
 function CreateThread(fn)
     Sim.threads[#Sim.threads + 1] = { co = coroutine.create(fn), wake = Sim.now }
@@ -189,6 +304,81 @@ end
 
 function GetPlayerName()
     return 'Tester'
+end
+
+-- The player stands at 10 on every axis, and an object is where it was created.
+function PlayerPedId()
+    return 10
+end
+
+function GetEntityCoords(entity)
+    local at = Sim.entities[entity]
+    if at then return at end
+    return { x = entity, y = entity, z = entity }
+end
+
+function GetEntityHeading(entity)
+    return Sim.entities[entity] and Sim.entities[entity].heading or 0.0
+end
+
+function SetEntityHeading(entity, heading)
+    if Sim.entities[entity] then Sim.entities[entity].heading = heading end
+end
+
+function GetOffsetFromEntityGivenWorldCoords(entity, x, y, z)
+    local at = GetEntityCoords(entity)
+    return { x = x - at.x, y = y - at.y, z = z - at.z }
+end
+
+function GetHashKey(name)
+    return name
+end
+
+function IsModelInCdimage(model)
+    return not Sim.missingModels[model]
+end
+
+function RequestModel() end
+
+function HasModelLoaded()
+    return true
+end
+
+function SetModelAsNoLongerNeeded() end
+
+function FreezeEntityPosition() end
+
+-- Every model of the tests is a small prop, half a metre tall, unless Sim.tall names it.
+function GetModelDimensions(model)
+    local height = Sim.tall and Sim.tall[model] or 0.5
+    return { x = -0.3, y = -0.2, z = 0.0 }, { x = 0.3, y = 0.2, z = height }
+end
+
+function GetEntityModel(entity)
+    return Sim.entities[entity] and Sim.entities[entity].model or 0
+end
+
+function SetEntityLocallyInvisible() end
+
+function PlaceObjectOnGroundProperly(entity)
+    record('object', { call = '"ground"', entity = json.encode(entity) })
+    return true
+end
+
+function CreateObject(model, x, y, z)
+    Sim.lastEntity = (Sim.lastEntity or 500) + 1
+    Sim.entities[Sim.lastEntity] = { x = x, y = y, z = z, heading = 0.0, model = model }
+    record('object', { call = '"create"', model = json.encode(model), entity = json.encode(Sim.lastEntity) })
+    return Sim.lastEntity
+end
+
+function DoesEntityExist(entity)
+    return Sim.entities[entity] ~= nil
+end
+
+function DeleteEntity(entity)
+    Sim.entities[entity] = nil
+    record('object', { call = '"delete"', entity = json.encode(entity) })
 end
 
 -- Fires an event the way FiveM does: every handler in its own coroutine, with the global

@@ -3,6 +3,8 @@ import { defineConfig } from 'tsup';
 export default defineConfig({
   entry: {
     'runtime/index': 'src/runtime/index.ts',
+    // What a page loads for world screens, and only then. See src/runtime/world.ts.
+    'runtime/world': 'src/runtime/world.ts',
     'compiler/index': 'src/compiler/index.ts',
     'vite/index': 'src/vite/index.ts',
     'contract/index': 'src/contract/index.ts',

@@ -62,17 +62,28 @@ export function surfaceOf(file: string): string | null {
   }
 }
 
-/** Which screen is the app of each surface. Two screens on one surface are returned as a conflict. */
-export function findSurfaces(screens: ScreenFile[]): { surfaces: Record<string, string>; conflict: [surface: string, first: ScreenFile, second: ScreenFile] | null } {
+export interface Surfaces {
+  /** Which screen is the app of each surface. */
+  surfaces: Record<string, string>;
+  /** Whether a screen is drawn in the world. There may be any number of those. */
+  world: boolean;
+  /** Two screens that claim the same app. */
+  conflict: [surface: string, first: ScreenFile, second: ScreenFile] | null;
+}
+
+/** What the screens of a project say about where they are shown. */
+export function findSurfaces(screens: ScreenFile[]): Surfaces {
   const owners = new Map<string, ScreenFile>();
+  let world = false;
   for (const screen of screens) {
     const surface = surfaceOf(screen.file);
-    if (!surface) continue;
+    if (surface === 'world') world = true;
+    if (!surface || surface === 'world') continue;
     const first = owners.get(surface);
-    if (first) return { surfaces: {}, conflict: [surface, first, screen] };
+    if (first) return { surfaces: {}, world, conflict: [surface, first, screen] };
     owners.set(surface, screen);
   }
-  return { surfaces: Object.fromEntries([...owners].map(([surface, screen]) => [surface, screen.name])), conflict: null };
+  return { surfaces: Object.fromEntries([...owners].map(([surface, screen]) => [surface, screen.name])), world, conflict: null };
 }
 
 export interface EntryOptions {
@@ -80,25 +91,30 @@ export interface EntryOptions {
   url(file: string): string;
   dev: boolean;
   surfaces: Record<string, string>;
+  /** The project has a world screen, so its page must be able to load what one needs. */
+  world: boolean;
   /** The project's `contract.ts`, when it has one. */
   contract: string | null;
 }
 
 /**
  * The entry module: hands the runtime one lazy import per screen, so the code of a screen is
- * loaded when it is first opened, and says which screen is the app of each surface.
+ * loaded when it is first opened, and says which screen is the app of each surface. A project
+ * with a world screen also gets the import of the code behind one, which only a page that is a
+ * display, or that forwards input to one, ever follows.
  *
  * While developing it also accepts hot updates of the screens, mounting the changed one again
  * with the props it had, and checks the props Lua opens a screen with against the `screens`
  * section of the contract. Neither the contract nor the check is part of a build.
  */
 export function entryModule(screens: ScreenFile[], options: EntryOptions): string {
-  const { url, dev, surfaces, contract } = options;
+  const { url, dev, surfaces, world, contract } = options;
   const urls = screens.map((screen) => JSON.stringify(url(screen.file)));
   const loaders = screens.map((screen, index) => `  ${JSON.stringify(screen.name)}: () => import(${urls[index]}),\n`);
   const check = dev && contract !== null;
   const settings = [
     ...(Object.keys(surfaces).length ? [`  surfaces: ${JSON.stringify(surfaces)},\n`] : []),
+    ...(world ? ["  world: () => import('nexus/world'),\n"] : []),
     ...(check
       ? [
           '  check(screen, props) {\n' +

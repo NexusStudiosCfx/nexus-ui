@@ -151,6 +151,32 @@ describe('build', () => {
     expect(entry.code).not.toContain('do not match web/contract.ts');
   });
 
+  test('a world screen puts what it needs in a file of its own, behind an import the entry is given', async () => {
+    const output = await bundle(
+      project({
+        'web/screens/Main.nexus': '<screen focus="mouse" />\n<p>main</p>',
+        'web/screens/Clock.nexus': '<screen surface="world" size="1280x720" />\n<p>clock</p>',
+        'web/screens/Terminal.nexus': '<screen surface="world" size="800x600" />\n<p>terminal</p>',
+      }),
+    );
+    const chunks = output.filter((chunk): chunk is Rolldown.OutputChunk => 'code' in chunk);
+    const entry = chunks.find((chunk) => chunk.isEntry) as Rolldown.OutputChunk;
+    const world = chunks.filter((chunk) => chunk.code.includes('nexusCursor'));
+    expect(world).toHaveLength(1);
+    expect(world[0]).not.toBe(entry);
+    expect(entry.dynamicImports).toContain(world[0]!.fileName);
+    expect(entry.imports).not.toContain(world[0]!.fileName);
+    // Any number of screens may be drawn in the world: they are not apps, of which there is one.
+    expect(entry.code).not.toMatch(/surfaces:\s*{/);
+  });
+
+  test('a project without a world screen carries nothing for one', async () => {
+    const output = await bundle(project({ 'web/screens/Main.nexus': '<screen focus="mouse" />\n<p>main</p>' }));
+    const chunks = output.filter((chunk): chunk is Rolldown.OutputChunk => 'code' in chunk);
+    expect(chunks.some((chunk) => chunk.code.includes('nexusCursor'))).toBe(false);
+    expect((chunks.find((chunk) => chunk.isEntry) as Rolldown.OutputChunk).code).not.toMatch(/world:/);
+  });
+
   test('two screens on one surface stop the build, naming both', async () => {
     const error = await failure({
       'web/screens/First.nexus': '<screen surface="phone" />\n<p>a</p>',
@@ -328,7 +354,7 @@ describe.skipIf(!CHROMIUM_103)('dev server: the page, apps and screen props in C
             {
               tag: 'script',
               attrs: { type: 'module' },
-              children: `import { createToolbar } from '/@fs/${toolbar}'; createToolbar({ resource: 'fixture', screens: ['main'], apps: ['phone', 'tablet'], hasMock: false, toggle() {}, frameChanged() {} });`,
+              children: `import { createToolbar } from '/@fs/${toolbar}'; createToolbar({ resource: 'fixture', screens: ['main'], apps: ['phone', 'tablet'], worlds: [{ name: 'kiosk', width: 800, height: 600 }], hasMock: false, toggle() {}, frameChanged() {} });`,
               injectTo: 'head',
             },
           ],
@@ -382,6 +408,18 @@ describe.skipIf(!CHROMIUM_103)('dev server: the page, apps and screen props in C
     expect(await page.locator('[data-nexus-dev] button', { hasText: 'phone app' }).getAttribute('aria-pressed')).toBe('true');
     expect(errors).toEqual([]);
     await page.locator('[data-nexus-dev] button', { hasText: 'phone app' }).click();
+    await frame.waitFor({ state: 'detached' });
+  });
+
+  test('a world screen has a button, and a frame of its size whose address says which display it is', async () => {
+    const button = page.locator('[data-nexus-dev] button', { hasText: 'kiosk' });
+    await button.click();
+    const frame = page.locator('[data-nexus-dev] iframe');
+    await frame.waitFor();
+    expect([await frame.getAttribute('width'), await frame.getAttribute('height')]).toEqual(['800', '600']);
+    expect(await frame.getAttribute('src')).toBe('/?surface=world&screen=kiosk&display=kiosk&resource=fixture');
+    expect(await button.getAttribute('aria-pressed')).toBe('true');
+    await button.click();
     await frame.waitFor({ state: 'detached' });
   });
 

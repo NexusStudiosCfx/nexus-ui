@@ -61,14 +61,15 @@ function serve(folder: string): Promise<Server> {
   return new Promise((done) => server.listen(0, '127.0.0.1', () => done(server)));
 }
 
-/** What stands in for the game: a development host, the page of a resource, or the frame of an app. */
-export type Mode = 'host' | 'game' | 'phone' | 'tablet';
+/** What stands in for the game: a development host, the page of a resource, the frame of an app, or the browser of a display. */
+export type Mode = 'host' | 'game' | 'phone' | 'tablet' | 'world';
 
 /**
  * Runs in the page before its scripts. It counts the listeners on the window and the document,
  * which is how a test proves that a closed screen left none behind, and stands in for FiveM:
  * as a development host, as the game's own browser, or as the frame LB Phone or LB Tablet gives
- * an app. That frame has no resource name, and LB Tablet wraps what Lua sends to it.
+ * an app. That frame has no resource name, and LB Tablet wraps what Lua sends to it. The browser
+ * of a display has no resource name either, and gets what Lua sends as it is.
  */
 export function installHost(mode: Mode): void {
   const sent: unknown[] = [];
@@ -180,11 +181,11 @@ export async function builtScripts(): Promise<Record<string, string>> {
  * the page. In the other modes the page finds what it finds in FiveM instead: the NUI callback
  * endpoint and messages on the window. `query` is added to the address, as LB does for an app.
  */
-export async function openFixture(options: { mode?: Mode; query?: string } = {}): Promise<Fixture> {
+export async function openFixture(options: { mode?: Mode; query?: string; viewport?: { width: number; height: number } } = {}): Promise<Fixture> {
   const mode = options.mode ?? 'host';
   const inGame = mode !== 'host';
   const { url } = await site();
-  const page = await (await launch()).newPage({ viewport: { width: 1280, height: 720 } });
+  const page = await (await launch()).newPage({ viewport: options.viewport ?? { width: 1280, height: 720 } });
   const errors: string[] = [];
   const posted: Record<string, unknown>[] = [];
   page.on('pageerror', (error) => errors.push(error.message));

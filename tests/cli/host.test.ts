@@ -336,3 +336,98 @@ describe('the mock host in version 0.2', () => {
     expect(() => host.open('garagePhone')).toThrow("'garagePhone' is the phone app. Its frame opens it, as LB does in game.");
   });
 });
+
+describe('the mock host and world screens', () => {
+  const definition = contract({
+    calls: { 'clock:punch': { input: s.object({ pin: s.string({ max: 8 }) }), output: s.object({ ok: s.boolean() }) } },
+    pushes: { 'clock:tick': s.object({ time: s.int() }) },
+    state: { shift: s.object({ onDuty: s.boolean() }) },
+    screens: { clock: s.object({ business: s.string() }) },
+  });
+
+  const SCREENS = [
+    { name: 'shop', layer: 'screen' as const, surface: null },
+    { name: 'clock', layer: 'screen' as const, surface: 'world' as const, size: { width: 1280, height: 720 } },
+    { name: 'terminal', layer: 'screen' as const, surface: 'world' as const, size: { width: 800, height: 600 } },
+  ];
+
+  let host: Host;
+  let pages: Record<'main' | 'clock' | 'terminal', Record<string, unknown>[]>;
+  let context: { set(name: string, patch: unknown): void; push(name: string, data: unknown): void };
+
+  const settle = (): Promise<unknown> => vi.advanceTimersByTimeAsync(0);
+
+  beforeEach(async () => {
+    vi.useFakeTimers();
+    pages = { main: [], clock: [], terminal: [] };
+    host = createHost(
+      {
+        resource: 'demo',
+        contract: definition,
+        screens: SCREENS,
+        mock: mock(definition, {
+          locale: { title: 'Clock' },
+          state: { shift: { onDuty: false } },
+          worlds: { clock: { props: { business: 'police' } } },
+          calls: { 'clock:punch': () => ({ ok: true }) },
+          setup: (given) => void (context = given as never),
+        }),
+      },
+      { opened: () => {}, crossed: () => {}, action: () => () => {} },
+    );
+    host.bridge.onMessage((message) => pages.main.push(message as Record<string, unknown>));
+    host.frame('world:clock').onMessage((message) => pages.clock.push(message as Record<string, unknown>));
+    host.frame('world:terminal').onMessage((message) => pages.terminal.push(message as Record<string, unknown>));
+    await host.bridge.post({ t: 'ready' });
+    await host.frame('world:clock').post({ t: 'ready', surface: 'world', display: 'clock' });
+    await host.frame('world:terminal').post({ t: 'ready', surface: 'world', display: 'terminal' });
+    await settle();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('opens the screen of a display when its page is ready, with the props of the mock', () => {
+    expect(pages.clock).toEqual([
+      { __nexus: 1, t: 'locale', data: { title: 'Clock' } },
+      { __nexus: 1, t: 'state', name: 'shift', data: { onDuty: false } },
+      { __nexus: 1, t: 'open', screen: 'clock', props: { business: 'police' } },
+    ]);
+    expect(pages.terminal[2]).toEqual({ __nexus: 1, t: 'open', screen: 'terminal', props: {} });
+    expect(pages.main.some((message) => message.t === 'open')).toBe(false);
+  });
+
+  it('answers a call to the display that made it, and sends pushes and state to every display', async () => {
+    await host.frame('world:terminal').post({ t: 'call', id: 3, name: 'clock:punch', data: { pin: '1' }, surface: 'world', display: 'terminal' });
+    context.push('clock:tick', { time: 9 });
+    context.set('shift', { onDuty: true });
+    await settle();
+    const shared = [
+      { __nexus: 1, t: 'push', name: 'clock:tick', data: { time: 9 } },
+      { __nexus: 1, t: 'state', name: 'shift', data: { onDuty: true } },
+    ];
+    expect(pages.clock.slice(3)).toEqual(shared);
+    expect(pages.terminal.slice(3)).toEqual([...shared, { __nexus: 1, t: 'res', id: 3, ok: true, data: { ok: true } }]);
+    expect(pages.main.slice(-2)).toEqual(shared);
+  });
+
+  it('sends a display the keyboard as Lua does, and nothing once its frame is closed', async () => {
+    host.send('world:clock', { t: 'type', text: 'a' });
+    host.send('world:clock', { t: 'key', key: 'Enter' });
+    await settle();
+    expect(pages.clock.slice(3)).toEqual([
+      { __nexus: 1, t: 'type', text: 'a' },
+      { __nexus: 1, t: 'key', key: 'Enter' },
+    ]);
+    host.closeFrame('world:clock');
+    host.send('world:clock', { t: 'type', text: 'b' });
+    context.push('clock:tick', { time: 1 });
+    await settle();
+    expect(pages.clock).toHaveLength(5);
+  });
+
+  it('does not open a world screen as a screen of the page', () => {
+    expect(() => host.open('clock')).toThrow("'clock' is a world screen. Its frame shows it, as a display does in game.");
+  });
+});

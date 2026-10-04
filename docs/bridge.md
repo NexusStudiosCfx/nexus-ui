@@ -15,6 +15,7 @@ Contents:
 - [In server Lua](#in-server-lua)
 - [Refusals](#refusals)
 - [Surfaces](#surfaces)
+- [World screens](#world-screens)
 - [Security model](#security-model)
 - [Where JSON and Lua differ](#where-json-and-lua-differ)
 - [Dev mode](#dev-mode)
@@ -61,7 +62,7 @@ export default contract({
 | `pushes` | Lua to page | `Nexus.push(...)` on either side | `nui.on(name, fn)` |
 | `client` | page to client Lua | `Nexus.on(name, fn)` on the client | `nui.client(name, data)` |
 | `state` | Lua to page | `Nexus.set(...)` on either side | `nui.state(name)` |
-| `screens` | client Lua to page | `Nexus.open(name, props)` on the client | `props` of the screen |
+| `screens` | client Lua to page | `Nexus.open(name, props)` on the client, `Nexus.world` for a world screen | `props` of the screen |
 
 A call has four optional parts:
 
@@ -250,6 +251,7 @@ Nexus.onClose('shop', function() end)
 
 local result, problem = Nexus.call('shop:buy', { item = 'water', amount = 2 })   -- a contract call
 Nexus.app('phone', { name = 'Shop' })               -- an app in LB Phone, see Surfaces
+Nexus.world('clock', { txd = 'my_clock', texture = 'my_clock_face' })   -- a screen on a prop, see World screens
 ```
 
 - **Focus is automatic.** The screen opened last that asks for focus has it. When it closes,
@@ -282,9 +284,11 @@ Nexus.app('phone', { name = 'Shop' })               -- an app in LB Phone, see S
   line that used it.
 
 The runtime starts no thread while it is idle. One runs while a `keep-input` screen has focus,
-and one for a quarter of a second after a screen is closed from the page.
+one for a quarter of a second after a screen is closed from the page, and one while a display is
+operated.
 
-When the resource stops, the `onClose` handlers of open screens run and focus is released.
+When the resource stops, the `onClose` handlers of open screens run, focus is released and
+every display is destroyed.
 
 ## In server Lua
 
@@ -449,6 +453,178 @@ them from `Nexus.onClose` the same way, with a state the page watches.
 registers, and a `Nexus.app` for a surface no screen declares. See
 [`nexus check`](cli.md#nexus-check).
 
+A third surface, `world`, is not an app: it has a section of its own.
+
+## World screens
+
+A world screen is drawn on a texture in the game world instead of over the game: the screen of a
+monitor, a time clock, a kiosk. FiveM calls the mechanism DUI: an off-screen browser whose
+picture becomes a texture, which replaces a texture of a model. The screen is a file in
+`web/screens` like any other, with the surface and the size of that browser in its tag:
+
+```nexus
+<screen surface="world" size="1280x720" />
+```
+
+Client Lua creates a display of it:
+
+```lua
+local display, problem = Nexus.world('clock', {
+    txd = 'my_time_clock',            -- the texture dictionary: for a prop, the name of its model
+    texture = 'my_time_clock_face',   -- the texture in it that is the screen
+    props = { business = 'police' },  -- optional
+})
+if not display then
+    -- problem is 'unavailable', 'limit' or 'taken': open an ordinary screen instead
+end
+```
+
+| | |
+|---|---|
+| `Nexus.world(name, options)` | Creates a display of the world screen `name`. Returns it, or `nil, reason`. |
+| `display:set(props)` | Replaces the props of its screen. |
+| `display:destroy()` | Puts the original texture back and frees the browser. |
+| `display:alive()` | Whether the display still exists. |
+| `display:pointer(x, y)` | Moves the pointer. `x` and `y` run from 0 to 1 across and down the screen. |
+| `display:press(button)`, `display:release(button)` | A mouse button, `'left'`, `'right'` or `'middle'`. A press and a release in one place are a click. |
+| `display:scroll(lines)` | Turns the wheel. Positive is down. |
+| `display:type(text)` | Types text at the caret of the field that has the focus. |
+| `display:key(key)` | Presses `Backspace`, `Delete`, `Enter`, `Tab`, `Escape`, `ArrowLeft`, `ArrowRight`, `ArrowUp`, `ArrowDown`, `Home` or `End`. |
+| `Nexus.operate(display, options)` | Lets the player use the display with the mouse and the keyboard. |
+| `Nexus.release()` | Ends that. |
+
+`Nexus.world` never raises an error for a display that cannot be made. It returns `nil` and why:
+
+| Reason | Meaning |
+|---|---|
+| `unavailable` | The game gave no browser. |
+| `limit` | The resource already has as many displays as it may. |
+| `taken` | A display of this resource already draws on that texture. |
+
+- **A display is a browser.** Nothing is created until `Nexus.world` is called, and each display
+  costs memory and a share of every frame for as long as it exists. Create one for a player who
+  is close enough to see it, and destroy it when they leave. A resource has at most 2 displays at
+  a time. `setr nexus_world_limit 4` in the server configuration raises that for every resource.
+- **The model has to be loaded.** FiveM replaces a texture only if it finds it at that moment, so
+  call `Nexus.world` once the prop exists. A replacement does not outlive its model being
+  unloaded either: a display that is kept while the player is far away may come back showing the
+  prop's own texture.
+- **Every copy of the model shows the same picture, on this client only.** A texture is
+  replaced, not one object, and nothing is synchronised: other players see the texture the prop
+  ships with, which is therefore its idle face. To show them a live screen, create a display on
+  their clients too.
+- **The screen is opened with its props**, as soon as its page has loaded, and `display:set`
+  replaces them. `props` are typed and checked by `contract.screens` like those of any screen.
+- **Lua opens and closes it through its display.** `Nexus.open` and `Nexus.close` refuse the name
+  of a world screen. `Nexus.onOpen` runs with the props when a display of the screen is created
+  and `Nexus.onClose` when one is destroyed. `Nexus.isOpen(name)` says whether one exists.
+- **Calls are answered to the display that asked.** Pushes, state and the locale reach every
+  display, as they reach the main page and the apps. `nui.client` messages arrive at the same
+  `Nexus.on` handlers, whichever page sent them.
+- **Every display is destroyed when the resource stops**, with its texture put back.
+- A world screen takes no `focus`, `keep-input`, `close` or `layer`. `nui.close()` does nothing
+  in it.
+
+### Input on a display
+
+The game can put a mouse into the browser of a display and nothing else. It has no cursor, no
+keyboard and never the input focus. The runtime fills those in:
+
+- **The page draws its own cursor**, an arrow where the pointer was last sent, and puts it away
+  after three seconds without the mouse. It is the element `[data-nexus-cursor]`, for a screen
+  that wants another look.
+- **Text and keys arrive as messages** and are turned into what the keyboard would have done. A
+  key first reaches the `onKey` handlers and `on:keydown` listeners of the screen, as a `keydown`
+  event. If none of them takes it:
+
+  | Key | Does |
+  |---|---|
+  | a character | Goes into the field that has the focus, at its caret. Space presses a focused button or ticks a checkbox. |
+  | `Backspace`, `Delete` | Erase the selection, or the character before or after the caret. |
+  | `Enter` | Submits the form of an `<input>`, breaks the line in a `<textarea>`, presses a focused button or link. |
+  | `Tab` | Moves the focus to the next element that takes it, and from the last to the first. |
+  | arrows, `Home`, `End` | Move the caret in a field. |
+  | `Escape` | Nothing of its own. |
+
+  `bind:value` and `on:input` see every edit, and a field keeps to its `maxlength`.
+- **`:focus` never matches on a display**, because the browser never has the focus, and no caret
+  is drawn. The runtime puts `data-nexus-focus` on the element that has the focus instead. Style
+  it wherever you style `:focus`:
+
+  ```css
+  input:focus, input[data-nexus-focus] { border-color: #c8ff3d; }
+  ```
+
+What a display cannot do: a double click (every click is a single one), a drag that depends on
+`event.buttons` (it reads 0), the list of a `<select>` (build the choice from buttons), dead keys
+and input methods that compose a character from several keys.
+
+### Operating a display
+
+```lua
+Nexus.operate(display, {
+    entity = prop,                                             -- the camera goes to face it
+    camera = { offset = vec3(0.0, -0.75, 0.42), fov = 38.0 },  -- relative to the entity
+    onExit = function() end,
+})
+```
+
+`Nexus.operate` hands the display to the player: the mouse moves its pointer, the buttons and the
+wheel work on it, and what is typed and pasted goes to it. The HUD is hidden and the game's
+controls are off while it lasts.
+
+| Option | |
+|---|---|
+| `entity` | With it, a scripted camera moves in front of the entity. Without it the view stays as it is. |
+| `camera.offset` | Where the camera stands, relative to the entity. Default: 0.8 in front of its origin, on its negative Y axis. |
+| `camera.target` | What the camera looks at, relative to the entity. Default: straight ahead along the entity's Y axis, which is head on to a screen that faces the camera's side. |
+| `camera.fov` | The field of view. Default: 40. |
+| `screen` | Where the screen is on the entity: `center` relative to the entity, and `width` and `height` in metres, for a screen that stands upright across the entity's X axis. With it, the game's cursor points at the screen itself. Needs `entity`. |
+| `onExit` | Runs when it ends, however it ends. |
+
+- **With a camera, the player does not see their own character** while it lasts, because the
+  camera stands about where they do. Everyone else still sees them standing at the prop.
+- **It ends** on Escape, when W, A, S or D is held for a little over half a second, when Lua
+  calls `Nexus.release()`, when the display is destroyed, and when a screen that takes the focus
+  is opened: that screen is what the player uses from then on.
+- **It returns whether it started.** It does not start for a display that is gone, before the
+  page of the resource has loaded, or while a screen has the focus.
+- **One display is operated at a time.** Operating a second lets go of the first, whose `onExit`
+  runs.
+- **With `screen`, the game's cursor is the pointer.** The mouse acts on what the cursor is
+  over on the prop, wherever the camera stands, and only while it is over the screen. The
+  display draws no cursor of its own.
+
+  ```lua
+  Nexus.operate(display, {
+      entity = prop,
+      camera = { offset = vec3(0.0, 0.6, 1.32), target = vec3(0.0, 0.0, 1.32), fov = 45.0 },
+      screen = { center = vec3(0.0, -0.12, 1.32), width = 0.70, height = 0.39 },
+  })
+  ```
+
+- **Without `screen`, the pointer covers the screen as the mouse covers the window.** The left
+  edge of the game window is the left edge of the screen, whatever the camera shows around it,
+  and the display draws its own cursor where the clicks land. Unless the screen fills the view
+  exactly, that cursor and the game's are in different places, so give `screen` whenever you
+  know the prop.
+- **How it works.** Only the page of the resource can receive the keyboard, so `Nexus.operate`
+  gives it the input focus and the page forwards the mouse and the keys to Lua, which passes
+  them to the display. The focus is taken once the page has said that it is forwarding, so a page
+  that did not load cannot leave the player without a way out. The screens of the page hear none
+  of what is forwarded.
+
+The runtime starts no thread for a display. One runs while a display is operated.
+
+### Proving it in game
+
+`examples/world` is a resource that proves each link of this chain inside the game. `/worldtest`
+puts a prop in front of you, creates a display on it and prints PASS or FAIL for what Lua can
+observe: the browser, the page reaching Lua, Lua reaching the page, and the pointer, a click, the
+wheel, text and a key arriving. The screen on the prop shows the same list, so a screenshot
+holds the result. `/worldtest use` operates it, and `/worldtest <model> <txd> <texture>` runs the
+test on any model. See the [roadmap](roadmap.md#world-screens) for what is not yet proved.
+
 ## Security model
 
 A player controls their own client completely. They can open the developer tools of the page,
@@ -546,6 +722,10 @@ export default mock(contract, {
   screens: {
     shop: { item: 'water', price: 5, stock: 3 },
   },
+  // The props each world screen is shown with, as Nexus.world would give them.
+  worlds: {
+    clock: { props: { business: 'police' } },
+  },
   // The first value of each state.
   state: {
     hud: { health: 100, armour: 0, cash: 500 },
@@ -584,8 +764,11 @@ messages: unknown calls, invalid input, the rate limit, and answers and refusal 
 not match (always checked, as in dev mode). The props under `screens` are checked against
 `contract.screens`. A call without a handler is answered with `offline`.
 
-A screen with a `surface` is shown in a frame the size of a phone or a tablet, over the page,
-by its own button in the toolbar. Hiding the frame is what LB closing the app is in game.
+A screen with a `surface` is shown in a frame over the page, by its own button in the toolbar:
+an app in a frame the size of a phone or a tablet, a world screen in a frame of its `size`.
+Hiding the frame is what LB closing the app, or Lua destroying the display, is in game. In the
+frame of a world screen the keyboard is sent as the `type` and `key` messages a display gets in
+game, so typing takes the same path in the browser as on a prop.
 
 ## Wire format
 
@@ -605,6 +788,23 @@ answers the request at once with `{}`. The result of a call comes back later as 
 An app adds `surface: 'phone'` or `surface: 'tablet'` to each of these and posts to the same
 callback, so that Lua answers the frame that asked. An app cannot send `close`.
 
+A display is the page loaded as
+`web/dist/index.html?surface=world&screen=<name>&display=<id>&resource=<name>`. It adds
+`surface: 'world'` and `display`, the id from its address, to each message, and cannot send
+`close` either.
+
+While a display is operated, the page of the resource also sends what the player does:
+
+| Body | Meaning |
+|---|---|
+| `{ t: 'input', kind: 'ready' }` | The page forwards input from now on. |
+| `{ t: 'input', kind: 'pointer', x, y }` | The mouse moved. `x` and `y` run from 0 to 1 across the window. |
+| `{ t: 'input', kind: 'press' \| 'release', button, x, y }` | A mouse button. |
+| `{ t: 'input', kind: 'scroll', lines }` | The wheel. |
+| `{ t: 'input', kind: 'type', text }` | A character was typed, or text was pasted. |
+| `{ t: 'input', kind: 'key', key }` | A key that is not a character. |
+| `{ t: 'input', kind: 'leave' }` | A walking key was held. |
+
 **Lua to page**: `SendNUIMessage`, received as a `message` event. Every message has `__nexus: 1`.
 
 | Message | Meaning |
@@ -619,6 +819,16 @@ callback, so that Lua answers the frame that asked. An app cannot send `close`.
 
 An app receives the same messages through LB's `SendCustomAppMessage`, which LB forwards to the
 frame with `postMessage`. `open` and `close` are never sent to an app.
+
+A display receives them through `SendDuiMessage`: `open` for its one screen, once its page is
+ready and again when its props are replaced, and two messages of its own:
+
+| Message | Meaning |
+|---|---|
+| `{ t: 'type', text }` | Type this text into the field that has the focus. |
+| `{ t: 'key', key }` | Press this key. |
+
+The page of the resource is told to forward input, and to stop, with `{ t: 'operate', on }`.
 
 **Client to server**: the event `<resource>:nexus:call` with `id, name, data`. **Server to
 client**: `<resource>:nexus:res` with `id, ok, data` or `id, false, code, message, details`,

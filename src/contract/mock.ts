@@ -64,6 +64,11 @@ export interface MockDefinition<D extends ContractDefinition = ContractDefinitio
    * `screens` section of the contract for the screens it lists.
    */
   screens?: { [K in ScreenName<D>]?: ScreenData<D, K> } & Record<string, Record<string, unknown>>;
+  /**
+   * The props each world screen is shown with in its frame on the dev page, as
+   * `Nexus.world(name, { props })` would give them in game.
+   */
+  worlds?: { [K in ScreenName<D>]?: { props?: ScreenData<D, K> } } & Record<string, { props?: Record<string, unknown> }>;
   /** The strings behind `t()`, usually the resource's own locale file. */
   locale?: LocaleTable;
   /** The first value of each state object. */

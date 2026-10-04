@@ -357,6 +357,51 @@ describe('the nexus command line', { timeout: 120000 }, () => {
       });
     });
 
+    it('reports a world screen that Lua opens as a screen, a display of what is none, and a world screen without a size', () => {
+      const world = '<screen surface="world" size="800x600" />\n\n<p>Clock</p>\n';
+      withFile('my_shop/web/screens/Clock.nexus', world, () => {
+        // A resource may have as many world screens as it likes, and nothing has to register one.
+        withFile('my_shop/web/screens/Terminal.nexus', world, () => {
+          const fine = nexus('my_shop', 'check');
+          expect(fine.output).toContain('ok 3 components checked, no errors.');
+          expect(fine.status).toBe(0);
+        });
+
+        const lua = [
+          "Nexus.open('clock')",
+          "local a = Nexus.world('main', { txd = 'a', texture = 'b' })",
+          "local b = Nexus.world('clokc', { txd = 'a', texture = 'b' })",
+          "-- Nexus.world('nowhere', {})",
+          "local c = Nexus.world('clock', { txd = 'a', texture = 'b' })",
+        ].join('\n');
+        withChange('my_shop/client/main.lua', "RegisterCommand('my_shop'", `${lua}\n\nRegisterCommand('my_shop'`, () => {
+          const wrong = nexus('my_shop', 'check');
+          expect(wrong.status).toBe(1);
+          expect(wrong.output).toContain('error client/main.lua:6:1: Nexus.open cannot open "clock": it is a world screen, which is drawn on a prop and not on the page. (world-open)');
+          expect(wrong.output).toContain("Create a display of it: Nexus.world('clock', { txd = '...', texture = '...' })");
+          expect(wrong.output).toContain("error client/main.lua:7:11: Nexus.world('main', ...) names a screen that is not a world screen. (world-missing)");
+          expect(wrong.output).toContain("error client/main.lua:8:11: Nexus.world('clokc', ...) names no screen. (world-missing)");
+          expect(wrong.output).toContain("Did you mean 'clock'?");
+          // A call in a comment is not a call.
+          expect(wrong.output).not.toContain("Nexus.world('nowhere', ...)");
+          expect(wrong.output).toContain('nexus check found 3 errors.');
+          // The build runs the same checks, before it writes anything.
+          expect(nexus('my_shop', 'build').output).toContain('(world-open)');
+        });
+      });
+
+      withFile('my_shop/web/screens/Clock.nexus', '<screen surface="world" />\n\n<p>Clock</p>\n', () => {
+        const unsized = nexus('my_shop', 'check');
+        expect(unsized.status).toBe(1);
+        expect(unsized.output).toContain('error web/screens/Clock.nexus:1:1: A world screen needs a `size`: the resolution of the browser that draws it. (world-size)');
+      });
+      withFile('my_shop/web/screens/Clock.nexus', '<screen surface="world" size="800x600" focus="mouse" />\n\n<p>Clock</p>\n', () => {
+        const focused = nexus('my_shop', 'check');
+        expect(focused.status).toBe(1);
+        expect(focused.output).toContain('`focus` has no meaning on a world screen, which is drawn on a prop. It takes no focus: the player uses it through `Nexus.operate`. (surface-attribute)');
+      });
+    });
+
     it('reports a broken contract and still checks the components', () => {
       withChange('my_shop/web/contract.ts', 'export default contract({', 'export const draft = contract({', () => {
         const result = nexus('my_shop', 'check');
@@ -572,6 +617,211 @@ describe('the nexus command line', { timeout: 120000 }, () => {
         { kind: 'print', text: 'Player 7 now has $32500.' },
       ]);
       lua.close();
+    });
+  });
+
+  describe('the world example', () => {
+    beforeAll(() => copyProject('examples/world', 'world'));
+
+    const DISPLAY = { surface: 'world', display: '1' };
+    const HELLO = {
+      address: 'https://cfx-nui-demo/web/dist/index.html',
+      opened: true,
+      field: { x: 0.75, y: 0.25 },
+      button: { x: 0.75, y: 0.5 },
+      list: { x: 0.75, y: 0.75 },
+    };
+
+    const start = async (): Promise<Lua> => {
+      const lua = await Lua.create({ fivem: true });
+      for (const file of ['nexus/contract.lua', 'nexus/screens.lua', 'nexus/client.lua', 'client/main.lua']) await lua.run(read('world', file));
+      await lua.post({ t: 'ready' });
+      await lua.run(`Sim.command('worldtest', 0)`);
+      await lua.tick(50, 2);
+      return lua;
+    };
+
+    const printed = (log: LogEntry[]): string[] => log.flatMap((entry) => (entry.kind === 'print' ? [entry.text] : []));
+
+    it('builds, names its world screen and passes nexus check', () => {
+      const built = nexus('world', 'build');
+      expect(built.output).toContain("ok world screen: web/screens/Proof.nexus, 1280 by 720, drawn by Nexus.world('proof', { ... })");
+      expect(built.output).toContain('ok fxmanifest.lua loads the bridge and ships web/dist');
+      expect(built.status).toBe(0);
+      expect(read('world', 'nexus/screens.lua')).toContain("surface = 'world', width = 1280, height = 720");
+      const checked = nexus('world', 'check');
+      expect(checked.output).toContain('ok 1 component checked, no errors.');
+      expect(checked.status).toBe(0);
+      // The example ships its generated types, so that an editor has them before the first build.
+      expect(readFileSync(join(REPO, 'examples/world/web/nexus-contract.d.ts'), 'utf8')).toBe(read('world', 'web/nexus-contract.d.ts'));
+    });
+
+    it('/worldtest puts a display on the prop and reports every step the page confirms', async () => {
+      const lua = await start();
+      const created = await lua.drain();
+      expect(created.find((entry) => entry.kind === 'object')).toMatchObject({ call: 'create', model: 'prop_laptop_lester2' });
+      expect(created.find((entry) => entry.kind === 'createDui')).toMatchObject({ width: 1280, height: 720 });
+      expect(created.find((entry) => entry.kind === 'replaceTexture')).toMatchObject({ txd: 'prop_laptop_lester2', texture: 'script_rt_tvscreen' });
+
+      // The test plays the page: it says it is ready and says hello, then answers what Lua does
+      // to its browser the way web/screens/Proof.nexus does.
+      await lua.post({ t: 'ready', ...DISPLAY });
+      await lua.post({ t: 'client', name: 'worldtest:hello', data: HELLO, ...DISPLAY });
+      const said: string[] = printed(created);
+      const saw = (what: string): Promise<void> => lua.post({ t: 'client', name: 'worldtest:saw', data: { what, detail: 'seen' }, ...DISPLAY });
+      let pointer: unknown[] = [];
+      for (let frame = 0; frame < 200 && !said.some((line) => line.includes('6 LOOK')); frame++) {
+        await lua.tick(50);
+        for (const entry of await lua.drain()) {
+          if (entry.kind === 'print') said.push(entry.text);
+          else if (entry.kind === 'duiMessage' && entry.message.t === 'push') {
+            await lua.post({ t: 'client', name: 'worldtest:pong', data: { nonce: (entry.message.data as { nonce: number }).nonce }, ...DISPLAY });
+          } else if (entry.kind === 'duiMessage' && (entry.message.t === 'type' || entry.message.t === 'key')) {
+            await saw(entry.message.t === 'type' ? 'text' : 'key');
+          } else if (entry.kind === 'duiMouse' && entry.event === 'move') {
+            pointer = entry.args;
+            await saw('pointer');
+          } else if (entry.kind === 'duiMouse' && entry.event === 'up' && pointer[1] === 360) await saw('click');
+          else if (entry.kind === 'duiMouse' && entry.event === 'wheel') await saw('wheel');
+        }
+      }
+
+      expect(said.map((line) => line.replace(/\s+/g, ' ').split(' ').slice(0, 4).join(' '))).toEqual([
+        '[worldtest] 1 PASS a',
+        '[worldtest] 2 PASS the',
+        '[worldtest] 3 PASS SendDuiMessage',
+        '[worldtest] 5 PASS pointer',
+        '[worldtest] 5 PASS text',
+        '[worldtest] 5 PASS key',
+        '[worldtest] 5 PASS click',
+        '[worldtest] 5 PASS wheel',
+        '[worldtest] 4 LOOK Lua',
+        '[worldtest] 6 LOOK run',
+      ]);
+      expect(said[1]).toContain('from https://cfx-nui-demo/web/dist/index.html');
+
+      await lua.run(`Sim.command('worldtest', 0, 'end')`);
+      const ended = await lua.drain();
+      expect(ended.filter((entry) => entry.kind !== 'print').map((entry) => entry.kind)).toEqual(['restoreTexture', 'destroyDui', 'object']);
+      expect(ended.filter((entry) => entry.kind === 'error')).toEqual([]);
+      lua.close();
+    });
+
+    it('/worldtest says which link is broken when the page stays silent, and when Lua does not reach it', async () => {
+      const silent = await start();
+      await silent.tick(500, 14);
+      const quiet = printed(await silent.drain());
+      expect(quiet[1]).toContain('[worldtest] 2 FAIL  the page said nothing within 6 seconds.');
+      expect(quiet).toHaveLength(2);
+      silent.close();
+
+      // The page mounted on its own, without its props, and no push ever arrives in it.
+      const deaf = await start();
+      await deaf.post({ t: 'client', name: 'worldtest:hello', data: { ...HELLO, opened: false }, ...DISPLAY });
+      await deaf.tick(500, 8);
+      const lines = printed(await deaf.drain());
+      expect(lines[1]).toContain('[worldtest] 2 PASS');
+      expect(lines[2]).toBe('[worldtest] 3 FAIL  the page did not answer a push: SendDuiMessage did not reach it');
+      deaf.close();
+    });
+
+    it('/worldtest takes any model, and refuses one the game does not have', async () => {
+      const lua = await Lua.create({ fivem: true });
+      for (const file of ['nexus/contract.lua', 'nexus/screens.lua', 'nexus/client.lua', 'client/main.lua']) await lua.run(read('world', file));
+      await lua.run(`Sim.missingModels.prop_nope = true`);
+      await lua.run(`Sim.command('worldtest', 0, 'prop_nope', 'prop_nope', 'screen')`);
+      await lua.run(`Sim.command('worldtest', 0, 'prop_tv_flat_01')`);
+      await lua.tick(50, 2);
+      expect(printed(await lua.drain())).toEqual([
+        '[worldtest] 1 FAIL  usage: /worldtest [laptop|atm], or /worldtest <model> <txd> <texture>',
+        "[worldtest] 1 FAIL  the game has no model 'prop_nope'",
+      ]);
+      await lua.run(`Sim.command('worldtest', 0, 'prop_tv_flat_01', 'prop_tv_flat_01', 'script_rt_tvscreen')`);
+      await lua.tick(50, 2);
+      expect((await lua.drain()).find((entry) => entry.kind === 'replaceTexture')).toMatchObject({ txd: 'prop_tv_flat_01', texture: 'script_rt_tvscreen' });
+      lua.close();
+    });
+
+    describe.skipIf(!CHROMIUM)('under nexus dev in Chromium 103 (set NEXUS_CHROMIUM_103 to run)', () => {
+      let server: ChildProcess;
+      let browser: Browser;
+      let page: Page;
+      // What the mock host and the page complain about, such as a message outside the contract.
+      const complaints: string[] = [];
+
+      beforeAll(async () => {
+        server = startNexus('world', 'dev', '--port', '5393');
+        await waitForOutput(server, 'is running at');
+        browser = await chromium.launch({ executablePath: CHROMIUM as string });
+        page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+        page.on('console', (message) => {
+          if (message.type() === 'warning' || message.type() === 'error') complaints.push(message.text());
+        });
+        await page.goto('http://localhost:5393/');
+        await page.locator('[data-nexus-dev] button', { hasText: 'proof' }).click();
+      }, 60000);
+
+      afterAll(async () => {
+        await browser?.close();
+        if (server) await stop(server);
+      });
+
+      const frame = () => page.frameLocator('[data-nexus-dev] iframe');
+
+      it('shows the world screen in a frame of its size, opened with the props of the mock', async () => {
+        await frame().locator('.proof h1').waitFor();
+        const iframe = page.locator('[data-nexus-dev] iframe');
+        expect([await iframe.getAttribute('width'), await iframe.getAttribute('height')]).toEqual(['1280', '720']);
+        expect(await iframe.getAttribute('src')).toBe('/?surface=world&screen=proof&display=proof&resource=world');
+        expect(await frame().locator('header p').textContent()).toBe('prop_laptop_lester2 · prop_laptop_lester2 / script_rt_tvscreen');
+        expect(await page.locator('[data-nexus-dev] button', { hasText: 'proof' }).getAttribute('aria-pressed')).toBe('true');
+        // The page of the resource itself shows nothing: a world screen is not one of its screens.
+        expect(await page.locator('[data-screen]').count()).toBe(0);
+      });
+
+      it('answers its call and sends it the state, as the display of the game would get them', async () => {
+        await frame().locator('dd', { hasText: /^\d\d:\d\d:\d\d$/ }).waitFor();
+        expect(await frame().locator('.steps li', { hasText: 'Lua reached the page' }).getAttribute('class')).toContain('pass');
+      });
+
+      it('draws the cursor of the display under the mouse', async () => {
+        const field = frame().locator('input');
+        await field.hover();
+        await frame().locator('[data-nexus-cursor]').waitFor({ state: 'visible' });
+        expect(await frame().locator('.steps li', { hasText: 'The pointer moved' }).getAttribute('class')).toContain('pass');
+      });
+
+      it('sends the keyboard as type and key messages, so that typing takes the path it takes in game', async () => {
+        const field = frame().locator('input');
+        await field.click();
+        // Only the events the page makes out of the messages reach it. The real ones stop at the frame.
+        await field.evaluate(() => {
+          const seen: boolean[] = [];
+          Object.assign(window, { trusted: seen });
+          addEventListener('keydown', (event) => seen.push(event.isTrusted));
+        });
+        await page.keyboard.type('nexus');
+        await frame().locator('.steps li.pass', { hasText: 'Text was typed' }).waitFor();
+        expect(await field.inputValue()).toBe('nexus');
+        await page.keyboard.press('Backspace');
+        await frame().locator('.steps li.pass', { hasText: 'A key was pressed' }).waitFor();
+        expect(await field.inputValue()).toBe('nexu');
+        expect(await field.evaluate(() => (window as unknown as { trusted: boolean[] }).trusted)).toEqual([false, false, false, false, false, false]);
+        expect(await field.getAttribute('data-nexus-focus')).toBe('');
+      });
+
+      it('takes a click and the wheel, and closes the display with the button', async () => {
+        await frame().locator('button').click();
+        await frame().locator('.steps li.pass', { hasText: 'A click arrived' }).waitFor();
+        await frame().locator('.list').hover();
+        await page.mouse.wheel(0, 100);
+        await frame().locator('.steps li.pass', { hasText: 'The wheel turned' }).waitFor();
+        // Every message of the page passed the contract, the places it reports to Lua included.
+        expect(complaints).toEqual([]);
+
+        await page.locator('[data-nexus-dev] button', { hasText: 'proof' }).click();
+        await page.locator('[data-nexus-dev] iframe').waitFor({ state: 'detached' });
+      });
     });
   });
 });

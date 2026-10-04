@@ -535,7 +535,7 @@ thing in the template, and its attributes are plain values, not expressions.
 | `size` | `1920x1080` | none | Design size: the screen is a box of this size, scaled to fit the window and centred. Without it the screen fills the window. |
 | `layer` | `screen`, `hud` | `screen` | A `hud` takes no focus and is drawn under the other screens |
 | `cursor` | a CSS cursor | none | Cursor over the screen |
-| `surface` | `phone`, `tablet` | none | The screen is an app in LB Phone or LB Tablet, see below |
+| `surface` | `phone`, `tablet`, `world` | none | The screen is an app in LB Phone or LB Tablet, or is drawn on a prop in the game world, see below |
 
 A screen file without the tag gets the defaults. The build writes these declarations to
 `nexus/screens.lua`, so focus is never handled by hand in Lua.
@@ -573,6 +573,34 @@ as long as the frame. Lua registers the app with `Nexus.app('phone', { ... })`.
   `nui.state` or a call. LB only delivers messages to an app whose frame exists (LB Tablet: only
   while the app is the one in front), so an app should ask for what it shows rather than count
   on having received every push.
+
+### World screens
+
+```nexus
+<screen surface="world" size="1280x720" />
+
+<main class="clock">...</main>
+```
+
+A screen with `surface="world"` is drawn on a texture of the game world, such as the screen of a
+prop, by a browser of its own. Lua creates a display of it with
+`Nexus.world('clock', { txd = '...', texture = '...', props = { ... } })`, and the screen is
+mounted in that browser with those props.
+
+- `size` is required: it is the resolution of the browser, and the screen fills it. Lay the
+  screen out in those pixels. A texture is seen from a distance and at an angle, so type that is
+  comfortable on a monitor is small on a prop.
+- The screen takes no `focus`, `keep-input`, `close` or `layer`: it is not on the page that has
+  the game's focus. A player uses it through `Nexus.operate`. `cursor` has no effect, because
+  the page draws the only cursor there is.
+- A resource may have any number of world screens. The same build serves them, the main page
+  and the apps, and what only a display needs is loaded only by a display.
+- `props`, `nui.call`, `nui.on`, `nui.state`, `nui.client`, `t()` and `onKey` work as in any
+  screen. Text fields work too, with two differences that come from the browser never having the
+  game's focus: `:focus` does not match, so style `[data-nexus-focus]` next to it, and no caret
+  is drawn.
+
+The Lua side, input and the limits are in [World screens](bridge.md#world-screens).
 
 ## Styles
 
@@ -634,8 +662,9 @@ instead. Besides syntax errors, these are checked:
 - Directives, modifiers and bindings exist, and a binding is on an element it works on and bound
   to something that can be written.
 - The key of an `{#each}` uses the item or the index.
-- `<screen>` appears once, first, with known attributes and valid values, and a surface screen
-  has none of the attributes its frame decides.
+- `<screen>` appears once, first, with known attributes and valid values. A surface screen has
+  none of the attributes its frame decides, and a world screen has a `size` and none of the
+  attributes that concern focus.
 - Markup the browser would rearrange is rejected, because the compiled code finds nodes by
   position: a `<tr>` directly in a `<table>` (write the `<tbody>`), a `<div>` inside a `<p>`,
   an interactive element nested in another of the same kind, text directly inside a table row.

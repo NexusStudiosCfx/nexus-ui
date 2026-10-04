@@ -7,7 +7,7 @@ import { color, log } from './log';
 import { checkManifest } from './manifest';
 import { display, findProject, listFiles, loadContract } from './project';
 import { readSources } from './sources';
-import { checkSurfaces, findApps } from './surfaces';
+import { checkSurfaces, findApps, findWorlds } from './surfaces';
 
 /**
  * `nexus build`: the production page in `web/dist`, the Lua bridge in `nexus/`, and a check that
@@ -51,6 +51,9 @@ export async function build(argv: readonly string[], cwd: string): Promise<void>
   log.step(BRIDGE_FILES.join(', '));
   for (const app of findApps(sources)) {
     log.step(`${app.surface} app: ${app.file}, registered by Nexus.app('${app.surface}', { ... })`);
+  }
+  for (const world of findWorlds(sources)) {
+    log.step(`world screen: ${world.file}, ${world.width} by ${world.height}, drawn by Nexus.world('${world.screen}', { ... })`);
   }
 
   const report = checkManifest(manifest, built);

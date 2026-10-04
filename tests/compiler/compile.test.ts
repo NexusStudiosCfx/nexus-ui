@@ -276,6 +276,13 @@ describe('options and result', () => {
     expect(compile('<screen surface="tablet" />', { filename: 'A.nexus' }).screen).toMatchObject({ surface: 'tablet', close: 'none' });
   });
 
+  test('screen: a world screen is drawn by a browser of its size, and takes no focus', () => {
+    const result = compile('<screen surface="world" size="1280x720" />\n<p>x</p>', { filename: 'Clock.nexus' });
+    const declaration = { focus: { mouse: false, keyboard: false }, keepInput: false, close: 'none', size: { width: 1280, height: 720 }, layer: 'screen', cursor: null, surface: 'world' };
+    expect(result.screen).toEqual(declaration);
+    expect(result.js.code).toContain(`const $screen = ${JSON.stringify(declaration)};`);
+  });
+
   test('css: inject puts the styles in the module, external only returns them', () => {
     const source = '<p>x</p>\n<style>p { color: red; }</style>';
     const injected = compile(source, { filename: 'A.nexus' });

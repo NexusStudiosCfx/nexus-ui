@@ -16,11 +16,12 @@ Contents:
 7. [A HUD fed by Lua](#7-a-hud-fed-by-lua)
 8. [Strings and languages](#8-strings-and-languages)
 9. [An app in LB Phone or LB Tablet](#9-an-app-in-lb-phone-or-lb-tablet)
-10. [Build it and start it on a server](#10-build-it-and-start-it-on-a-server)
-11. [Develop inside the game](#11-develop-inside-the-game)
-12. [Check before you release](#12-check-before-you-release)
-13. [Installing from a release file, or a clone](#13-installing-from-a-release-file-or-a-clone)
-14. [When something goes wrong](#14-when-something-goes-wrong)
+10. [A screen on a prop](#10-a-screen-on-a-prop)
+11. [Build it and start it on a server](#11-build-it-and-start-it-on-a-server)
+12. [Develop inside the game](#12-develop-inside-the-game)
+13. [Check before you release](#13-check-before-you-release)
+14. [Installing from a release file, or a clone](#14-installing-from-a-release-file-or-a-clone)
+15. [When something goes wrong](#15-when-something-goes-wrong)
 
 ## 1. What you need
 
@@ -42,7 +43,7 @@ npm install
 `npm create nexus-ui` runs `nexus create` from the newest release on npm, and the new resource
 depends on `@nexusstudios/ui` by version, so `npm update` brings later fixes. To work without the
 registry, from a downloaded file or a clone, see
-[Installing from a release file](#13-installing-from-a-release-file-or-a-clone).
+[Installing from a release file](#14-installing-from-a-release-file-or-a-clone).
 
 The folder is a complete FiveM resource:
 
@@ -406,7 +407,90 @@ With an app in the project, the bar of `npm run dev` gains a `phone app` or `tab
 shows the app in a frame of the device's size, next to the screens, fed by the same mock. The
 reference is [Surfaces](bridge.md#surfaces).
 
-## 10. Build it and start it on a server
+## 10. A screen on a prop
+
+A screen can also be drawn in the game world: on the monitor of a desk, a kiosk, a time clock.
+It is again the same kind of file. Its tag says `world`, and the size of the browser that draws
+it:
+
+```nexus
+---
+import { signal } from 'nexus';
+
+const query = signal('');
+---
+
+<screen surface="world" size="1024x576" />
+
+<main class="kiosk">
+  <h1>{props.title}</h1>
+  <input bind:value={query} placeholder="Search the menu">
+  <p>You typed: {query}</p>
+</main>
+
+<style>
+  .kiosk { height: 100%; padding: 40px; background: #09090b; color: #f5f5f5; font-size: 32px; }
+  input { font: inherit; padding: 12px 16px; border: 2px solid #3f3f46; background: #18181b; color: inherit; }
+  input:focus, input[data-nexus-focus] { border-color: #c8ff3d; }
+</style>
+```
+
+Save it as `web/screens/Kiosk.nexus`. Client Lua draws it on a texture of the prop, once the
+prop exists, and takes it away again when the player has left:
+
+```lua
+local display
+
+local function showKiosk()
+    local problem
+    display, problem = Nexus.world('kiosk', {
+        txd = 'my_kiosk',              -- the name of the prop's model
+        texture = 'my_kiosk_screen',   -- the texture its screen shows
+        props = { title = 'Orders' },
+    })
+    if not display then print('The kiosk stays dark: ' .. problem) end
+end
+
+local function hideKiosk()
+    if display then display:destroy() end
+    display = nil
+end
+```
+
+The prop needs a texture of its own for its screen, which is what `texture` names. What that
+texture holds in the model file is what players see while there is no display, and what every
+other player sees.
+
+To let the player use it, from a target option or a key near the prop:
+
+```lua
+Nexus.operate(display, {
+    entity = prop,
+    camera = { offset = vec3(0.0, -0.7, 0.4), fov = 40.0 },
+    onExit = function() end,
+})
+```
+
+The camera moves in front of the prop, the mouse moves a cursor on its screen, and what the
+player types goes into the field that was clicked. Escape gives the game back.
+
+What changes for a world screen:
+
+- Lua creates a display of it instead of opening it. `Nexus.open` refuses its name.
+- It is one browser per display, so a resource has two at a time unless the server raises
+  `nexus_world_limit`, and `Nexus.world` returns `nil` and a reason instead of a display when
+  there can be none. Fall back to an ordinary screen then.
+- The browser never has the game's focus. A field that was clicked takes what is typed, yet
+  `:focus` does not match it: the style above also names `[data-nexus-focus]`, which the runtime
+  sets instead.
+- Size the type for a prop seen from a few steps away, not for a monitor.
+
+In `web/mock.ts`, `worlds: { kiosk: { props: { title: 'Orders' } } }` gives the screen its props
+under `npm run dev`, where the bar gains a `kiosk` button that shows it in a frame of its size.
+The reference is [World screens](bridge.md#world-screens), and `examples/world` is a resource
+that tests every part of this in game.
+
+## 11. Build it and start it on a server
 
 ```
 npm run build
@@ -433,7 +517,7 @@ of git. A release has to contain them all the same: a server owner who downloads
 has no Node.js to build it with. Run `npm run build` and pack the folder with those two inside,
 or attach the built folder to the release instead of relying on the source archive.
 
-## 11. Develop inside the game
+## 12. Develop inside the game
 
 To see changes in game without building each time:
 
@@ -448,7 +532,10 @@ the screen in game. The page talks to the real Lua here, not to the mock.
 A change to the contract or to a `<screen>` tag changes the Lua bridge. The terminal says so,
 and `ensure my_shop` loads it.
 
-## 12. Check before you release
+A display of a world screen loads its page from the dev server as well, so the screen on the
+prop updates when its file is saved.
+
+## 13. Check before you release
 
 ```
 npm run check
@@ -458,16 +545,16 @@ type-checks the scripts and the templates against the contract and reports CSS a
 that FiveM's browser, Chromium 103, cannot run. It exits with an error code when it finds
 something, so it can run in CI. See [`nexus check`](cli.md#nexus-check).
 
-## 13. Installing from a release file, or a clone
+## 14. Installing from a release file, or a clone
 
 Every release on GitHub has the package attached as one file, `nexusstudios-ui-<version>.tgz`: the same
 file npm serves. It is there for a machine without access to the registry, and for a build of
 your own. Download it, then:
 
 ```
-npx --package ./nexusstudios-ui-0.2.2.tgz nexus create my_shop
+npx --package ./nexusstudios-ui-0.3.0.tgz nexus create my_shop
 cd my_shop
-npm install --save-dev ../nexusstudios-ui-0.2.2.tgz
+npm install --save-dev ../nexusstudios-ui-0.3.0.tgz
 ```
 
 The last line installs everything the resource needs and points its `@nexusstudios/ui` dependency at the
@@ -495,7 +582,8 @@ environment variable `NEXUS_CHROMIUM_103` holds the path of its executable.
 
 The example resource is in `examples/garage`: a garage menu with a list, a search, a purchase
 that the server validates and can refuse, a vehicle HUD, and the same garage as an app in LB
-Phone. It depends on the package from npm like any other resource:
+Phone. `examples/world` is a second, small one: a screen on a prop, and `/worldtest` to prove in
+game that every part of it works. Both depend on the package from npm like any other resource:
 
 ```
 cd examples/garage
@@ -506,10 +594,10 @@ npm run build
 To build it against the file you packed from the clone instead, install that over it:
 
 ```
-npm install --no-save ../../releases/nexusstudios-ui-0.2.2.tgz
+npm install --no-save ../../releases/nexusstudios-ui-0.3.0.tgz
 ```
 
-## 14. When something goes wrong
+## 15. When something goes wrong
 
 **`nexus/contract.lua must load before nexus/server.lua`** in the server console. The manifest
 loads the bridge in the wrong order. Run `npm run build`: it prints the lines to use.
@@ -537,6 +625,12 @@ resource stops. If another resource took focus, that one has to release it.
 **`npm install` stops with `ERESOLVE` after adding a linter.** A new resource pins TypeScript to
 `~6.0.0` because typescript-eslint 8 accepts nothing newer. If you raised it, lower it again or
 leave the linter out. `nexus check` works with either.
+
+**The prop shows its own screen, not the world screen.** `Nexus.world` returned a display, and
+the texture was not replaced: FiveM only replaces a texture it finds at that moment. Check that
+the prop exists before the display is created, that `txd` is the name of its model and `texture`
+the name of the texture in it, both spelt as in the model file. `/worldtest <model> <txd> <texture>`
+in `examples/world` tries a model in isolation.
 
 **The app is not in the phone.** The client console says why when LB refuses it, with the reason
 LB gave. Otherwise check that `Nexus.app` runs at the top level of a client script, that the

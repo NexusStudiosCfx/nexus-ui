@@ -42,6 +42,10 @@ export default function nexus(options: NexusOptions = {}): Plugin {
   let screens: string;
   // The surfaces the entry module was generated with, to notice when a screen changes its own.
   let entrySurfaces = '';
+  const surfacesNow = (): string => {
+    const { surfaces, world } = findSurfaces(findScreens(screens));
+    return JSON.stringify([surfaces, world]);
+  };
 
   /** A path relative to the resource, which is how files are named in messages and source maps. */
   const display = (file: string): string => normalizePath(relative(resolve(config.root, '..'), file));
@@ -134,14 +138,15 @@ export default function nexus(options: NexusOptions = {}): Plugin {
     async resolveId(id, importer) {
       if (id === ENTRY || id === ENTRY_URL) return ENTRY_ID;
 
-      if (id === 'nexus' || id === 'nexus/contract' || (paths.fromSource && (id === '@nexusstudios/ui' || id === '@nexusstudios/ui/contract'))) {
-        const contract = id.endsWith('/contract');
+      const part = /^(nexus|@nexusstudios\/ui)(?:\/(contract|world))?$/.exec(id);
+      if (part && (part[1] === 'nexus' || paths.fromSource)) {
+        const module = part[2] as 'contract' | 'world' | undefined;
         if (!paths.fromSource) {
           // The same resolution as a direct import of the package, so there is one copy of it.
-          const found = await this.resolve(contract ? '@nexusstudios/ui/contract' : '@nexusstudios/ui', importer, { skipSelf: true });
+          const found = await this.resolve(`@nexusstudios/ui${module ? `/${module}` : ''}`, importer, { skipSelf: true });
           if (found) return found;
         }
-        return contract ? paths.contract : paths.runtime;
+        return paths[module ?? 'runtime'];
       }
 
       // The build asks for index.html as its entry even when the project has none.
@@ -152,7 +157,7 @@ export default function nexus(options: NexusOptions = {}): Plugin {
     load(id) {
       if (id === ENTRY_ID) {
         const found = findScreens(screens);
-        const { surfaces, conflict } = findSurfaces(found);
+        const { surfaces, world, conflict } = findSurfaces(found);
         if (conflict) {
           const [surface, first, second] = conflict;
           this.error(
@@ -160,12 +165,13 @@ export default function nexus(options: NexusOptions = {}): Plugin {
               `Remove surface="${surface}" from one of them. To show both in the app, make one a component of the other.`,
           );
         }
-        entrySurfaces = JSON.stringify(surfaces);
+        entrySurfaces = JSON.stringify([surfaces, world]);
         const contract = join(config.root, 'contract.ts');
         return entryModule(found, {
           url: (file) => `/${normalizePath(relative(config.root, file))}`,
           dev: config.command === 'serve',
           surfaces,
+          world,
           contract: existsSync(contract) ? contract : null,
         });
       }
@@ -224,7 +230,7 @@ export default function nexus(options: NexusOptions = {}): Plugin {
       if (!file.endsWith('.nexus')) return;
       // Which screen is the app of a surface is written into the entry module, which a hot
       // update does not run again: the page has to load anew.
-      if (entrySurfaces && JSON.stringify(findSurfaces(findScreens(screens)).surfaces) !== entrySurfaces) {
+      if (entrySurfaces && surfacesNow() !== entrySurfaces) {
         const entry = this.environment.moduleGraph.getModuleById(ENTRY_ID);
         if (entry) this.environment.moduleGraph.invalidateModule(entry);
         this.environment.hot.send({ type: 'full-reload' });

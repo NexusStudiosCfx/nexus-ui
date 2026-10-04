@@ -64,6 +64,10 @@ has:
 - one button per screen, which opens it with the props from `web/mock.ts` or closes it;
 - `phone app` and `tablet app`, when a screen has a `surface`: each shows or hides the app in a
   frame of the size LB gives it, 390 by 844 for the phone and 1280 by 800 for the tablet;
+- one button per world screen, under its name: it shows or hides the screen in a frame of its
+  `size`, opened with the props under `worlds` in `web/mock.ts`. The mouse works in the frame as
+  it does on a prop, the page draws its own cursor, and the keyboard is sent to it as the messages
+  a display gets in game;
 - the buttons that components add with `dev.action(label, fn)` and the mock adds with `action`;
 - `log`, which shows what crossed the bridge: calls with their answer and duration, pushes,
   client messages and state updates.
@@ -116,8 +120,9 @@ The game and the dev server must run on the same machine, since the page is load
    and what to write instead.
 3. Builds the page into `web/dist` for Chromium 103: newer syntax is rewritten, and each screen
    becomes its own file that is loaded when the screen is first opened. An app in LB Phone or LB
-   Tablet is the same page, so a project with apps builds once. Calls to `dev.action` are taken
-   out.
+   Tablet is the same page, and so is a world screen, so a project with either builds once. What
+   only world screens need is a file of its own, which a page without one never loads. Calls to
+   `dev.action` are taken out.
 4. Writes `nexus/client.lua`, `nexus/server.lua`, `nexus/contract.lua` and `nexus/screens.lua`.
    A file that would not change is not touched.
 5. Checks `fxmanifest.lua`:
@@ -131,8 +136,9 @@ The game and the dev server must run on the same machine, since the page is load
 
    When something is missing, the build fails and prints the exact lines to add.
 
-The build also runs the checks between apps, the contract and Lua that
-[`nexus check`](#nexus-check) runs, and stops on an error among them.
+The build also runs the checks between apps, world screens, the contract and Lua that
+[`nexus check`](#nexus-check) runs, and stops on an error among them. It lists the apps and the
+world screens it found.
 
 The four files in `nexus/` and the folder `web/dist` are what a release has to ship, next to your
 own Lua and `fxmanifest.lua`. Both are build output that the template's `.gitignore` leaves out
@@ -154,6 +160,10 @@ suitable for CI.
   and passes nothing along), a `surface` that no Lua registers with `Nexus.app` (a warning: LB
   will not show it), and a `Nexus.app` for a surface no screen declares (an error). Lua is
   searched for the call, not parsed.
+- **World screens**: one without a `size` or with `focus`, `keep-input`, `close` or `layer`, a
+  `Nexus.open` or `Nexus.close` with the name of a world screen, and a `Nexus.world` with a name
+  that is not one. The last two are reported at their line in the Lua file. A name that Lua
+  builds at run time is not seen.
 - **Types**: the scripts, the expressions in the templates, the props passed to components, and
   the `.ts` files under `web/`. A problem in a component is reported at its line in the
   `.nexus` file. Calls, pushes, client messages, state and the props of the screens the contract

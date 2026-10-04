@@ -18,7 +18,7 @@ export interface Component {
 export interface Sources {
   components: Component[];
   screens: ScreenInfo[];
-  /** What the compiler reports for the components, and a surface that two screens claim. */
+  /** What the compiler reports for the components, and an app that two screens claim. */
   diagnostics: Diagnostic[];
 }
 
@@ -50,12 +50,14 @@ export function readSources(project: Project): Sources {
       const name = screenNames.get(resolve(file));
       if (name !== undefined) {
         const declaration = result.screen ?? DEFAULT_SCREEN;
-        const taken = declaration.surface ? screens.find((screen) => screen.declaration.surface === declaration.surface) : undefined;
-        if (taken && declaration.surface) {
+        // An app has one screen. World screens are not counted: a resource has as many as it likes.
+        const app = declaration.surface === 'world' ? null : declaration.surface;
+        const taken = app ? screens.find((screen) => screen.declaration.surface === app) : undefined;
+        if (taken && app) {
           diagnostics.push(
             toDiagnostic(source, filename, 'error', {
               code: 'surface-taken',
-              message: `A resource has one ${declaration.surface} app, and ${taken.file} already is it.`,
+              message: `A resource has one ${app} app, and ${taken.file} already is it.`,
               hint: 'Keep one screen with this surface and make the other a component that it shows.',
               start: root.screen?.start ?? 0,
               end: root.screen?.end ?? 0,

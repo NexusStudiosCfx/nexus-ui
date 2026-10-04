@@ -22,6 +22,15 @@ export type LogEntry =
   | { kind: 'addApp'; resource: string; app: Record<string, unknown> }
   | { kind: 'removeApp'; resource: string; identifier: string }
   | { kind: 'appMessage'; resource: string; identifier: string; args: unknown[] }
+  | { kind: 'createDui'; dui: number; url: string; width: number; height: number }
+  | { kind: 'destroyDui'; dui: number }
+  | { kind: 'duiMessage'; dui: number; message: Record<string, unknown> }
+  | { kind: 'duiMouse'; dui: number; event: 'move' | 'down' | 'up' | 'wheel'; args: unknown[] }
+  | { kind: 'runtimeTexture'; txd: string; name: string; handle: string }
+  | { kind: 'replaceTexture'; txd: string; texture: string; with: [string, string] }
+  | { kind: 'restoreTexture'; txd: string; texture: string }
+  | { kind: 'camera'; call: string; args: unknown[] }
+  | { kind: 'object'; call: 'create' | 'delete'; entity: number; model?: string }
   | { kind: 'print'; text: string }
   | { kind: 'error'; text: string };
 

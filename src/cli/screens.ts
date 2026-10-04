@@ -12,8 +12,9 @@ export interface ScreenInfo {
 
 /**
  * Generates `nexus/screens.lua`: what the client runtime needs to know about each screen to
- * handle focus and Escape, and which screen is the app on a surface. Size and cursor only
- * matter to the page and are left out.
+ * handle focus and Escape, which screen is the app on a surface, and the size of the browser
+ * a world screen is drawn by. The size of any other screen and the cursor only matter to the
+ * page and are left out.
  */
 export function generateScreensLua(screens: readonly ScreenInfo[]): string {
   const rows = [...screens]
@@ -27,6 +28,7 @@ export function generateScreensLua(screens: readonly ScreenInfo[]): string {
         `escape = ${declaration.close === 'escape'}`,
       ];
       if (declaration.surface) fields.push(`surface = ${luaString(declaration.surface)}`);
+      if (declaration.surface === 'world' && declaration.size) fields.push(`width = ${declaration.size.width}`, `height = ${declaration.size.height}`);
       return `    ${luaKey(name)} = { ${fields.join(', ')} },\n`;
     });
   return (
