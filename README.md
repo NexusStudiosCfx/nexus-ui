@@ -106,6 +106,14 @@ Requirements: Node.js 20 or newer, and `lua54 'yes'` in the resource.
 
 ## Documentation
 
+The site has the documentation with search and a playground that compiles and runs `.nexus`
+code in the browser: **[nexusstudios-ui.vercel.app](https://nexusstudios-ui.vercel.app)**.
+
+[![The playground: a component, its preview and the bridge log](docs/media/playground.png)](https://nexusstudios-ui.vercel.app/playground/)
+
+The same documents live in this repository:
+
+
 - [Guide](docs/guide.md): from `nexus create` to a working screen, step by step.
 - [The `.nexus` format](docs/format.md): every block and directive.
 - [The bridge](docs/bridge.md): the contract, the Lua API, the security model, the wire format.
