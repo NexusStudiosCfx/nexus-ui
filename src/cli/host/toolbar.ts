@@ -161,7 +161,9 @@ export function createToolbar(options: ToolbarOptions): Toolbar {
       const scale = Math.min(1, (innerHeight - 96) / outer.height, (innerWidth - 48) / outer.width);
       // The shell keeps the size of the device and is scaled as a whole. Its box in the layout
       // is the one around it, which has the scaled size.
-      const shell = device.firstElementChild as HTMLElement;
+      const shell = device.firstElementChild as HTMLElement | null;
+      // A device that was never shown has no frame yet.
+      if (!shell) continue;
       shell.style.width = `${outer.width}px`;
       shell.style.height = `${outer.height}px`;
       shell.style.transform = `scale(${scale})`;

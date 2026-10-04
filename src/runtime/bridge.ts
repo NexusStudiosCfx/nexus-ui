@@ -136,6 +136,15 @@ function counter(name: string): Signal<number> {
   return count;
 }
 
+/**
+ * Counts a call in or out. The count is read without subscribing: a call made inside an effect
+ * must not make that effect depend on the counter it has just changed.
+ */
+function count(name: string, by: number): void {
+  const calls = counter(name);
+  calls.value = calls.peek() + by;
+}
+
 function state(name: string): Record<string, unknown> {
   let current = states.get(name);
   if (!current) states.set(name, (current = store({})));
@@ -147,7 +156,7 @@ function settle(id: number, error?: NuiError, data?: unknown): void {
   if (!call) return;
   pending.delete(id);
   clearTimeout(call.timer);
-  counter(call.name).value--;
+  count(call.name, -1);
   if (error) call.reject(error);
   else call.resolve(data);
 }
@@ -204,7 +213,7 @@ export const nui: Nui = {
   call(name: string, input?: unknown, options?: CallOptions) {
     listen();
     const id = ++lastId;
-    counter(name).value++;
+    count(name, 1);
     return new Promise<never>((resolve, reject) => {
       const timer = setTimeout(() => settle(id, new NuiError('timeout')), options?.timeout ?? 10000);
       pending.set(id, { name, resolve: resolve as Pending['resolve'], reject, timer });

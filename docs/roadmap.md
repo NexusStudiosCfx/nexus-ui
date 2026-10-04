@@ -60,6 +60,8 @@ code: a feature is either in and documented, or it is on this page.
   an app that is not in front.
 - **No notifications, no badge and no other LB feature.** `Nexus.app` registers the app and
   carries the bridge. What else LB offers is reached through LB's own exports.
+- **A resource that only has apps still has a page of its own.** `ui_page` is required, so
+  FiveM keeps the main page loaded, with nothing in it.
 - Only LB Phone and LB Tablet. No other phone or tablet resource is supported.
 
 ## The dev server

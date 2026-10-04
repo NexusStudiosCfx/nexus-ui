@@ -63,6 +63,24 @@ describe.skipIf(!CHROMIUM_103)('the bridge in Chromium 103', () => {
     expect(await text('#result')).toBe('failed:timeout:timeout');
   });
 
+  test('a call made inside an effect runs the effect once per change, not in a loop', async () => {
+    const { page } = fixture;
+    await page.click('#look');
+    expect(await text('#lookups')).toBe('runs:1');
+    const first = await lastCall();
+    expect(first).toMatchObject({ t: 'call', name: 'shop:buy', data: { item: 'water', amount: 1 } });
+    expect(await busy()).toBe(true);
+    await fixture.lua({ t: 'res', id: first.id, ok: true, data: { ok: true, balance: 1 } });
+    expect(await busy()).toBe(false);
+    // The answer changed the counter the call had touched: the effect must not have run again.
+    expect(await text('#lookups')).toBe('runs:1');
+
+    await page.click('#look');
+    expect(await text('#lookups')).toBe('runs:2');
+    await fixture.lua({ t: 'res', id: (await lastCall()).id, ok: true, data: { ok: true, balance: 1 } });
+    expect(await busy()).toBe(false);
+  });
+
   test('overlapping calls are answered by id and stay pending until the last one ends', async () => {
     const { page } = fixture;
     await page.click('#buy');

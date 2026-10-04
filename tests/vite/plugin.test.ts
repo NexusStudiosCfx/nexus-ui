@@ -328,7 +328,7 @@ describe.skipIf(!CHROMIUM_103)('dev server: the page, apps and screen props in C
             {
               tag: 'script',
               attrs: { type: 'module' },
-              children: `import { createToolbar } from '/@fs/${toolbar}'; createToolbar({ resource: 'fixture', screens: ['main'], apps: [], hasMock: false, toggle() {}, frameChanged() {} });`,
+              children: `import { createToolbar } from '/@fs/${toolbar}'; createToolbar({ resource: 'fixture', screens: ['main'], apps: ['phone', 'tablet'], hasMock: false, toggle() {}, frameChanged() {} });`,
               injectTo: 'head',
             },
           ],
@@ -370,6 +370,19 @@ describe.skipIf(!CHROMIUM_103)('dev server: the page, apps and screen props in C
     expect(box.width).toBeGreaterThan(50);
     expect(box.height).toBeGreaterThan(10);
     await page.locator('[data-nexus-dev] button', { hasText: 'main' }).click();
+  });
+
+  test('one app frame is shown and sized while the other app has never been shown', async () => {
+    await page.locator('[data-nexus-dev] button', { hasText: 'phone app' }).click();
+    const frame = page.locator('[data-nexus-dev] iframe');
+    await frame.waitFor();
+    const box = (await frame.boundingBox())!;
+    expect(box.width).toBeGreaterThan(100);
+    expect(box.height).toBeGreaterThan(200);
+    expect(await page.locator('[data-nexus-dev] button', { hasText: 'phone app' }).getAttribute('aria-pressed')).toBe('true');
+    expect(errors).toEqual([]);
+    await page.locator('[data-nexus-dev] button', { hasText: 'phone app' }).click();
+    await frame.waitFor({ state: 'detached' });
   });
 
   test('props that match the contract open the screen quietly', async () => {

@@ -414,6 +414,10 @@ its own documentation.
   `fxmanifest.lua` needs nothing extra.
 - **An app has no props and no focus of its own.** `focus`, `keep-input`, `close`, `size` and
   `layer` cannot stand next to `surface`.
+- **LB sets the root font size of an app** from the size the device is drawn at, so `rem`
+  follows the device: about 15px in the phone and 18.5px in the tablet at the sizes of the dev
+  frames. The same component is therefore larger in the tablet. Use `rem` for what should grow
+  with the device and `px` for what should not.
 - **LB Tablet removes the frame of an app that is not in front**, so a tablet app starts again
   each time it is opened. LB Phone keeps an app it has put in the background. Keep what must
   survive in state or on the server, not in the component.
