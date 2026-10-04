@@ -1,0 +1,351 @@
+---
+import { computed, dev, nui, onKey, signal, sound, t } from 'nexus';
+import VehicleDetail from '../components/VehicleDetail.nexus';
+import VehicleRow from '../components/VehicleRow.nexus';
+import { money, type Vehicle } from '../lib/format';
+import { useGarage } from '../lib/garage';
+import buySound from '../sounds/buy.wav';
+import errorSound from '../sounds/error.wav';
+import selectSound from '../sounds/select.wav';
+
+const garage = useGarage();
+const { vehicles, balance, status, failure } = garage;
+
+const query = signal('');
+const filter = signal<Vehicle['class'] | 'all'>('all');
+const selected = signal<string | null>(null);
+const notice = signal<{ done: boolean; text: string } | null>(null);
+
+const classes = computed(() => [...new Set(vehicles.value.map((vehicle) => vehicle.class))]);
+const current = computed(() => vehicles.value.find((vehicle) => vehicle.model === selected.value) ?? null);
+const visible = computed(() => {
+  const text = query.value.trim().toLowerCase();
+  return vehicles.value.filter(
+    (vehicle) => (filter.value === 'all' || vehicle.class === filter.value) && vehicle.label.toLowerCase().includes(text),
+  );
+});
+
+sound.register({ select: selectSound, buy: buySound, error: errorSound });
+
+function pick(model: string) {
+  if (selected.value === model) return;
+  selected.value = model;
+  notice.value = null;
+  sound.play('select', { volume: 0.6 });
+  nui.client('garage:preview', { model });
+}
+
+function move(step: number) {
+  const list = visible.value;
+  const index = list.findIndex((vehicle) => vehicle.model === selected.value);
+  const next = list[Math.max(0, Math.min(list.length - 1, index + step))];
+  if (next) pick(next.model);
+}
+
+async function buy() {
+  if (!current.value) return;
+  notice.value = await garage.buy(current.value);
+  sound.play(notice.value.done ? 'buy' : 'error');
+}
+
+const focus = (node: HTMLInputElement) => node.focus();
+
+onKey('ArrowDown', () => move(1));
+onKey('ArrowUp', () => move(-1));
+dev.action('Reload the catalogue', garage.load);
+---
+
+<screen focus="mouse keyboard" close="escape" size="1920x1080" />
+
+<main class="garage" transition:garage>
+  <header>
+    <h1>{t('garage.title')}</h1>
+    <div class="balance">
+      <span>{t('garage.balance')}</span>
+      <strong>{money(balance.value)}</strong>
+    </div>
+    <button class="close" title={t('garage.close')} on:click={() => nui.close()}>
+      <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 3l10 10M13 3L3 13" /></svg>
+    </button>
+  </header>
+
+  {#if status.value === 'loading'}
+    <p class="state">{t('garage.loading')}</p>
+  {:else if status.value === 'failed'}
+    <div class="state">
+      <p>{t('garage.failed', failure.value)}</p>
+      <button class="retry" on:click={garage.load}>{t('garage.retry')}</button>
+    </div>
+  {:else}
+    <div class="body">
+      <aside>
+        <input class="search" type="search" placeholder={t('garage.search')} bind:value={query} use:focus>
+
+        <div class="filters">
+          <button class:active={filter.value === 'all'} on:click={() => (filter.value = 'all')}>{t('garage.all')}</button>
+          {#each classes as name (name)}
+            <button class:active={filter.value === name} on:click={() => (filter.value = name)}>{t(`class.${name}`)}</button>
+          {/each}
+        </div>
+
+        <ul>
+          {#each visible as vehicle (vehicle.model)}
+            <VehicleRow {vehicle} selected={selected.value === vehicle.model} onPick={pick} />
+          {:else}
+            <li class="empty">{t('garage.empty')}</li>
+          {/each}
+        </ul>
+      </aside>
+
+      <section>
+        {#if current.value}
+          {#key current.value.model}
+            <VehicleDetail vehicle={current.value} balance={balance.value} busy={nui.pending('garage:buy')} onBuy={buy} />
+          {/key}
+          {#if notice.value}
+            <p class="notice" class:refused={!notice.value.done}>{notice.value.text}</p>
+          {/if}
+        {:else}
+          <p class="state">{t('garage.pick')}</p>
+        {/if}
+      </section>
+    </div>
+  {/if}
+</main>
+
+<style>
+  .garage {
+    position: absolute;
+    left: 300px;
+    top: 170px;
+    width: 1200px;
+    height: 740px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    background: #111113;
+    box-shadow: 0 40px 120px rgba(0, 0, 0, 0.6);
+    color: #f5f5f5;
+    font: 17px/1.4 'Inter', 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    padding: 26px 32px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  h1 {
+    margin: 0 auto 0 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .balance {
+    display: grid;
+    justify-items: end;
+    line-height: 1.2;
+  }
+
+  .balance span {
+    color: #71717a;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .balance strong {
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .close {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: #1a1a1e;
+    color: #a1a1aa;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .close:hover {
+    color: #f5f5f5;
+  }
+
+  .close:focus-visible,
+  .retry:focus-visible,
+  .filters button:focus-visible {
+    box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.3);
+  }
+
+  .close path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: 430px 1fr;
+    flex: 1;
+    min-height: 0;
+  }
+
+  aside {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    padding: 24px 20px 24px 24px;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .search {
+    padding: 13px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background: #1a1a1e;
+    color: inherit;
+    font: inherit;
+    outline: none;
+  }
+
+  .search:focus {
+    border-color: #c8ff3d;
+    box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.3);
+  }
+
+  .search::placeholder {
+    color: #71717a;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filters button {
+    padding: 6px 13px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    background: #1a1a1e;
+    color: #a1a1aa;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .filters button.active {
+    border-color: #c8ff3d;
+    background: #c8ff3d;
+    color: #0b1400;
+    font-weight: 600;
+  }
+
+  ul {
+    display: grid;
+    align-content: start;
+    gap: 4px;
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0 6px 0 0;
+    overflow-y: auto;
+  }
+
+  ul::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ul::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .empty {
+    padding: 24px 12px;
+    color: #71717a;
+    list-style: none;
+  }
+
+  section {
+    position: relative;
+    padding: 36px 44px 32px;
+  }
+
+  .state {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 16px;
+    height: 100%;
+    margin: 0;
+    color: #71717a;
+  }
+
+  .state p {
+    margin: 0;
+  }
+
+  .retry {
+    padding: 10px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: #1a1a1e;
+    color: #f5f5f5;
+    font: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .notice {
+    position: absolute;
+    left: 44px;
+    right: 44px;
+    bottom: 118px;
+    margin: 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+  }
+
+  .notice.refused {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+
+  @keyframes garage-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.985);
+    }
+  }
+
+  @keyframes garage-out {
+    to {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+  .garage-enter {
+    animation: garage-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .garage-leave {
+    animation: garage-out 140ms ease-in forwards;
+  }
+</style>

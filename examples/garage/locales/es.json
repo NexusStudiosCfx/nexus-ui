@@ -1,0 +1,46 @@
+{
+  "garage.title": "Garaje",
+  "garage.balance": "Saldo",
+  "garage.search": "Buscar por nombre",
+  "garage.all": "Todos",
+  "garage.empty": "Ningún vehículo coincide.",
+  "garage.loading": "Cargando el catálogo",
+  "garage.failed": "No se pudo cargar el catálogo (%s).",
+  "garage.retry": "Reintentar",
+  "garage.owned": "Tuyo",
+  "garage.price": "Precio",
+  "garage.buy": "Comprar por %s",
+  "garage.buying": "Comprando",
+  "garage.in_garage": "En tu garaje",
+  "garage.short": "Te faltan %s",
+  "garage.bought": "%s ya está en tu garaje.",
+  "garage.close": "Cerrar",
+  "garage.pick": "Elige un vehículo a la izquierda.",
+
+  "app.mine": "Mis vehículos",
+  "app.buy": "Comprar",
+  "app.none": "Aún no hay nada.",
+  "app.name": "Garaje",
+  "app.description": "Compra vehículos y consulta los tuyos",
+
+  "stat.speed": "Velocidad máxima",
+  "stat.acceleration": "Aceleración",
+  "stat.handling": "Manejo",
+
+  "class.compact": "Compacto",
+  "class.motorcycle": "Moto",
+  "class.sports": "Deportivo",
+  "class.super": "Superdeportivo",
+  "class.suv": "Todoterreno",
+
+  "error.not_enough_money": "No puedes pagar este vehículo.",
+  "error.already_owned": "Ya tienes este vehículo.",
+  "error.unknown_vehicle": "Este vehículo ya no está a la venta.",
+  "error.rate_limited": "Ve un poco más despacio.",
+  "error.timeout": "El servidor no respondió a tiempo.",
+  "error.other": "La compra falló (%s).",
+
+  "hud.fuel": "Combustible",
+  "hud.engine": "Motor",
+  "hud.unit": "km/h"
+}

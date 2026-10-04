@@ -1,0 +1,71 @@
+{
+  "name": "nexus-ui",
+  "version": "0.2.0",
+  "description": "A UI framework for FiveM: .nexus components, a typed bridge to Lua, and screens that cost nothing while closed.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NexusStudiosCfx/nexus-ui.git"
+  },
+  "homepage": "https://github.com/NexusStudiosCfx/nexus-ui",
+  "bugs": {
+    "url": "https://github.com/NexusStudiosCfx/nexus-ui/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "nexus": "./dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/runtime/index.d.ts",
+      "default": "./dist/runtime/index.js"
+    },
+    "./compiler": {
+      "types": "./dist/compiler/index.d.ts",
+      "default": "./dist/compiler/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "default": "./dist/vite/index.js"
+    },
+    "./contract": {
+      "types": "./dist/contract/index.d.ts",
+      "default": "./dist/contract/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "lua",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "fivem",
+    "nui",
+    "cfx",
+    "ui",
+    "framework"
+  ],
+  "dependencies": {
+    "@preact/signals-core": "^1.14.4",
+    "magic-string": "^1.4.2",
+    "vite": "^8.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "playwright-core": "^1.63.0",
+    "tsup": "^8.5.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3",
+    "wasmoon": "^1.16.0"
+  }
+}

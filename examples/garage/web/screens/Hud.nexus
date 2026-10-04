@@ -1,0 +1,97 @@
+---
+import { nui, t } from 'nexus';
+import Meter from '../components/Meter.nexus';
+
+// Kept in step with Nexus.set('hud', ...) in client/main.lua. Reading a key here is all it
+// takes for the node that shows it to update when Lua changes it.
+const hud = nui.state('hud');
+---
+
+<screen layer="hud" size="1920x1080" />
+
+{#if hud.visible}
+  <div class="hud" transition:hud>
+    <div class="speed">
+      <strong>{hud.speed}</strong>
+      <span>{t('hud.unit')}</span>
+    </div>
+    <p class="street">{hud.street}</p>
+    <div class="meters">
+      <Meter label={t('hud.fuel')} value={hud.fuel} low={hud.fuel < 15} />
+      <Meter label={t('hud.engine')} value={hud.engine} low={hud.engine < 30} />
+    </div>
+  </div>
+{/if}
+
+<style>
+  .hud {
+    position: absolute;
+    right: 56px;
+    bottom: 56px;
+    box-sizing: border-box;
+    width: 320px;
+    padding: 22px 24px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    background: rgba(17, 17, 19, 0.9);
+    color: #f5f5f5;
+    font: 17px/1.3 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .speed {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .speed strong {
+    font-size: 72px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .speed span {
+    color: #71717a;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .street {
+    margin: 6px 0 18px;
+    color: #a1a1aa;
+    font-size: 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .meters {
+    display: grid;
+    gap: 14px;
+  }
+
+  @keyframes hud-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
+
+  @keyframes hud-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .hud-enter {
+    animation: hud-in 200ms ease-out;
+  }
+
+  .hud-leave {
+    animation: hud-out 160ms ease-in forwards;
+  }
+</style>

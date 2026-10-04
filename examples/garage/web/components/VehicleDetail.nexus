@@ -1,0 +1,167 @@
+---
+import { computed, t } from 'nexus';
+import { money, type Vehicle } from '../lib/format';
+import Meter from './Meter.nexus';
+
+interface Props {
+  vehicle: Vehicle;
+  balance: number;
+  /** A purchase is on its way to the server. */
+  busy: boolean;
+  onBuy: () => void;
+}
+
+const missing = computed(() => props.vehicle.price - props.balance);
+---
+
+<article class="detail" transition:detail>
+  <p class="class">{t(`class.${props.vehicle.class}`)}</p>
+  <h2>{props.vehicle.label}</h2>
+
+  <div class="stats">
+    <Meter label={t('stat.speed')} value={props.vehicle.speed} />
+    <Meter label={t('stat.acceleration')} value={props.vehicle.acceleration} />
+    <Meter label={t('stat.handling')} value={props.vehicle.handling} />
+  </div>
+
+  <footer>
+    <div class="price">
+      <span>{t('garage.price')}</span>
+      <strong>{money(props.vehicle.price)}</strong>
+    </div>
+
+    {#if props.vehicle.owned}
+      <p class="owned">{t('garage.in_garage')}</p>
+    {:else if missing.value > 0}
+      <p class="short">{t('garage.short', money(missing.value))}</p>
+    {:else}
+      <button class="buy" disabled={props.busy} on:click={props.onBuy}>
+        {props.busy ? t('garage.buying') : t('garage.buy', money(props.vehicle.price))}
+      </button>
+    {/if}
+  </footer>
+</article>
+
+<style>
+  .detail {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .class {
+    margin: 0;
+    color: #c8ff3d;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  h2 {
+    margin: 6px 0 0;
+    font-size: 56px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  .stats {
+    display: grid;
+    gap: 22px;
+    margin-top: 40px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    background: #151518;
+    font-size: 17px;
+  }
+
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: auto;
+    padding-top: 28px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .price {
+    display: grid;
+    gap: 2px;
+  }
+
+  .price span {
+    color: #71717a;
+    font-size: 14px;
+  }
+
+  .price strong {
+    font-size: 30px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .buy {
+    min-width: 260px;
+    padding: 16px 28px;
+    border: 0;
+    border-radius: 14px;
+    background: #c8ff3d;
+    color: #0b1400;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    outline: none;
+    transition: transform 80ms ease, opacity 120ms ease;
+  }
+
+  .buy:hover {
+    opacity: 0.92;
+  }
+
+  .buy:focus-visible {
+    box-shadow: 0 0 0 4px rgba(200, 255, 61, 0.3);
+  }
+
+  .buy:active {
+    transform: scale(0.98);
+  }
+
+  .buy:disabled {
+    opacity: 0.5;
+    cursor: default;
+    transform: none;
+  }
+
+  .owned,
+  .short {
+    margin: 0;
+    padding: 14px 22px;
+    border-radius: 14px;
+    font-size: 17px;
+    font-weight: 600;
+  }
+
+  .owned {
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+  }
+
+  .short {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+
+  @keyframes detail-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+
+  .detail-enter {
+    animation: detail-in 180ms ease-out;
+  }
+</style>

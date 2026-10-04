@@ -1,0 +1,5 @@
+node_modules/
+
+# Written by `nexus build`
+web/dist/
+nexus/

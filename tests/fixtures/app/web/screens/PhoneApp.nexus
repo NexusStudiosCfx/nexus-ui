@@ -1,0 +1,30 @@
+---
+import { signal, nui, env, t, NuiError } from 'nexus';
+
+const result = signal('');
+const pushed = signal(0);
+const garage = nui.state('garage');
+
+async function list() {
+  try {
+    result.value = JSON.stringify(await nui.call('garage:list', { owner: 'me' }));
+  } catch (error) {
+    result.value = error instanceof NuiError ? `failed:${error.code}` : String(error);
+  }
+}
+
+nui.on('garage:changed', () => pushed.value++);
+---
+
+<screen surface="phone" />
+
+<main id="phone-app">
+  <h1 id="app-title">{t('app.title')}</h1>
+  <p id="app-env">{env.inGame}|{env.resource}</p>
+  <p id="app-props">{props.tab ?? 'no tab'}</p>
+  <p id="app-state">{garage.count ?? 'none'}</p>
+  <p id="app-pushed">{pushed}</p>
+  <p id="app-result">{result}</p>
+  <button id="app-list" on:click={list}>List</button>
+  <button id="app-preview" on:click={() => nui.client('garage:preview', { plate: 'NEXUS' })}>Preview</button>
+</main>

@@ -1,0 +1,142 @@
+import type { Contract } from './contract';
+import { nodeOf, type Schema, type SchemaNode } from './schema';
+
+const WIDTH = 100;
+const STEP = '  ';
+
+/** A single-quoted TypeScript string literal. */
+function quote(text: string): string {
+  const body = JSON.stringify(text).slice(1, -1).replace(/\\"/g, '"').replace(/'/g, "\\'");
+  return `'${body}'`;
+}
+
+function key(name: string): string {
+  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name) ? name : quote(name);
+}
+
+function maybeAbsent(node: SchemaNode): boolean {
+  return node.kind === 'optional' || node.kind === 'nullable';
+}
+
+/** The members of the union a schema stands for, without duplicates. */
+function members(node: SchemaNode, indent: string): string[] {
+  switch (node.kind) {
+    case 'enum':
+      return node.values.map(quote);
+    case 'union':
+      return [...new Set(node.members.flatMap((member) => members(member, indent)))];
+    case 'optional':
+      return [...new Set([...members(node.inner, indent), 'undefined'])];
+    case 'nullable':
+      return [...new Set([...members(node.inner, indent), 'null', 'undefined'])];
+    default:
+      return [single(node, indent)];
+  }
+}
+
+function print(node: SchemaNode, indent: string): string {
+  return members(node, indent).join(' | ');
+}
+
+function single(node: Exclude<SchemaNode, { kind: 'enum' | 'union' | 'optional' | 'nullable' }>, indent: string): string {
+  switch (node.kind) {
+    case 'string':
+      return 'string';
+    case 'int':
+    case 'number':
+      return 'number';
+    case 'boolean':
+      return 'boolean';
+    case 'json':
+      return 'unknown';
+    case 'literal':
+      return typeof node.value === 'string' ? quote(node.value) : String(node.value);
+    case 'array': {
+      const item = members(node.item, indent);
+      return item.length > 1 ? `(${item.join(' | ')})[]` : `${item[0]}[]`;
+    }
+    case 'record':
+      return `Record<string, ${print(node.value, indent)}>`;
+    case 'object': {
+      const names = Object.keys(node.fields);
+      if (names.length === 0) return 'Record<string, never>';
+      const member = (name: string, at: string): string => {
+        const field = node.fields[name] as SchemaNode;
+        // The `?` on the key already says the value may be missing.
+        const type = members(field, at).filter((part) => !maybeAbsent(field) || part !== 'undefined');
+        return `${key(name)}${maybeAbsent(field) ? '?' : ''}: ${type.join(' | ')}`;
+      };
+      const inline = `{ ${names.map((name) => member(name, indent)).join('; ')} }`;
+      if (!inline.includes('\n') && indent.length + inline.length <= WIDTH) return inline;
+      const deeper = indent + STEP;
+      return `{\n${names.map((name) => `${deeper}${member(name, deeper)};\n`).join('')}${indent}}`;
+    }
+  }
+}
+
+function typeOf(schema: Schema | null, indent: string): string {
+  return schema === null ? 'void' : print(nodeOf(schema), indent);
+}
+
+export interface TypesOptions {
+  /** Named in the header comment so a reader knows where the file came from. */
+  source?: string;
+  /** The module whose `NexusContract` interface is filled in. Default: `nexus`. */
+  module?: string;
+}
+
+/**
+ * Generates the declaration file that types `nui.call`, `nui.on`, `nui.client` and `nui.state`
+ * for one contract. It fills in the runtime's `NexusContract` interface, so nothing has to be
+ * imported for the types to apply.
+ */
+export function generateTypes(contract: Contract, options: TypesOptions = {}): string {
+  const member = `${STEP}${STEP}${STEP}`;
+
+  const section = (name: string, schemas: Readonly<Record<string, Schema>>): string => {
+    const names = Object.keys(schemas);
+    if (names.length === 0) return `${STEP}${STEP}${name}: {};\n`;
+    const body = names.map((entry) => `${member}${key(entry)}: ${typeOf(schemas[entry] as Schema, member)};\n`);
+    return `${STEP}${STEP}${name}: {\n${body.join('')}${STEP}${STEP}};\n`;
+  };
+
+  const callNames = Object.keys(contract.calls);
+  const calls =
+    callNames.length === 0
+      ? `${STEP}${STEP}calls: {};\n`
+      : `${STEP}${STEP}calls: {\n` +
+        callNames
+          .map((name) => {
+            const call = contract.calls[name]!;
+            const inner = member + STEP;
+            const codes = Object.keys(call.errors);
+            // The details of each refusal the call declares, by code, for `NuiError.details`.
+            const errors =
+              codes.length === 0
+                ? ''
+                : `${inner}errors: {\n${codes.map((code) => `${inner}${STEP}${key(code)}: ${typeOf(call.errors[code] as Schema, inner + STEP)};\n`).join('')}${inner}};\n`;
+            return (
+              `${member}${key(name)}: {\n` +
+              `${inner}input: ${typeOf(call.input, inner)};\n` +
+              `${inner}output: ${typeOf(call.output, inner)};\n` +
+              errors +
+              `${member}};\n`
+            );
+          })
+          .join('') +
+        `${STEP}${STEP}};\n`;
+
+  return (
+    `// Generated by Nexus UI from ${options.source ?? 'web/contract.ts'}. Do not edit: the next build overwrites it.\n` +
+    'export {};\n\n' +
+    `declare module ${quote(options.module ?? 'nexus')} {\n` +
+    `${STEP}interface NexusContract {\n` +
+    calls +
+    section('pushes', contract.pushes) +
+    section('client', contract.client) +
+    section('state', contract.state) +
+    section('screens', contract.screens) +
+    `${STEP}}\n` +
+    '}\n'
+  );
+}

@@ -1,0 +1,13 @@
+---
+import { nui } from 'nexus';
+
+const hud = nui.state('hud');
+---
+
+<screen layer="hud" size="1280x720" />
+
+<div id="hud">
+  <span id="health">{hud.health ?? 'unknown'}</span>
+  <span id="cash">{hud.cash ?? 0}</span>
+  <span id="place">{hud.place?.street ?? 'nowhere'}</span>
+</div>

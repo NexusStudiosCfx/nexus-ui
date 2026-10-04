@@ -1,0 +1,15 @@
+---
+import { effect } from 'nexus';
+
+interface Props {
+  items?: string[];
+}
+
+effect(() => {
+  (window as unknown as { brokenEffects: number }).brokenEffects = ((window as unknown as { brokenEffects?: number }).brokenEffects ?? 0) + 1;
+});
+
+const count = props.items!.length;
+---
+
+<p id="broken">{count}</p>

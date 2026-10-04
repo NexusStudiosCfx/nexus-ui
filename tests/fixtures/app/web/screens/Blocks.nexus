@@ -1,0 +1,87 @@
+---
+import { signal, computed } from 'nexus';
+import Card from '../components/Card.nexus';
+import Row from '../components/Row.nexus';
+import Meter from '../components/Meter.nexus';
+import * as ui from '../lib/ui';
+
+interface Item {
+  id: number;
+  label: string;
+  tags: string[];
+}
+
+interface Props {
+  items: Item[];
+  mode: 'list' | 'grid' | 'empty';
+  html: string;
+}
+
+const picked = signal<number | null>(null);
+const version = signal(1);
+const bars = signal([10, 20, 30]);
+const total = computed(() => props.items.length);
+const cardProps = { tone: 'warm' };
+
+function pick(id: number) {
+  picked.value = id;
+}
+---
+
+<screen focus="mouse" close="none" />
+
+<div id="blocks">
+  {#if props.mode === 'list'}
+    <p id="mode">list of {total}</p>
+  {:else if props.mode === 'grid'}
+    <p id="mode">grid</p>
+  {:else}
+    <p id="mode">nothing</p>
+  {/if}
+
+  {#if picked}<p id="picked">picked {picked}</p>{/if}
+
+  <ul id="keyed">
+    {#each props.items as item, index (item.id)}
+      <Row id={item.id} label={item.label} position={index + 1} onPick={pick} />
+    {:else}
+      <li id="none">No items</li>
+    {/each}
+  </ul>
+
+  <ol id="plain">
+    {#each props.items as { label, tags }, n}
+      <li class="entry">
+        {n}:{label}
+        {#each tags as tag}
+          <em class="tag" on:click={() => pick(n * 100 + tags.indexOf(tag))}>{tag}</em>
+        {/each}
+      </li>
+    {/each}
+  </ol>
+
+  {#key version}
+    <p id="keyed-block" data-version={version}>version {version}</p>
+  {/key}
+  <button id="bump" on:click={() => version.value++}>Bump</button>
+
+  <div id="raw">{@html props.html}</div>
+
+  <Card title="First" {...cardProps}>
+    <strong id="card-body">Body {total}</strong>
+    <span slot="footer" id="card-footer">Footer {picked.value ?? 'none'}</span>
+  </Card>
+  <Card title="Second" />
+  <ui.Badge label="dotted" />
+
+  <svg id="chart" width="60" height="40"><Meter values={bars} /></svg>
+  <button id="more-bars" on:click={() => (bars.value = [...bars.value, 5])}>More</button>
+
+  <table id="table">
+    <tbody>
+      {#each props.items as item (item.id)}
+        <tr><td>{item.label}</td></tr>
+      {/each}
+    </tbody>
+  </table>
+</div>

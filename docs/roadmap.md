@@ -1,0 +1,86 @@
+# Roadmap
+
+This is version 0.2. The list below is what it does not do. Nothing here is half done in the
+code: a feature is either in and documented, or it is on this page.
+
+## Editor
+
+- **No language server.** The VS Code extension highlights `.nexus` files and has snippets. It
+  does not complete, show types on hover or underline errors. `nexus check` reports type errors
+  in the terminal with their position in the `.nexus` file.
+- **A script block that starts after blank lines is not highlighted.** The compiler accepts
+  blank lines before the first `---`. The grammar expects it on the first line.
+- Only VS Code. The grammar is a TextMate grammar, which other editors can load, but no other
+  editor is packaged.
+
+## `nexus check`
+
+- **Slot content is not checked against the component that receives it**, and a `bind:` is not
+  checked to point at a signal. Scripts, template expressions and the props passed to a
+  component are checked.
+- **A component used with a spread** (`<Row {...item} />`) has each attribute checked on its
+  own, not the full set against `Props`.
+- **DOM APIs newer than Chromium 103 are only caught from a fixed list.** JavaScript built-ins
+  are caught from TypeScript's own knowledge of what exists. There is no such source for the
+  DOM, so a new DOM method that is not on the list passes.
+- No watch mode.
+
+## The contract
+
+- **No tuples and no recursive schemas.** A list has one item schema, and a schema cannot
+  contain itself. `s.json` takes data of unknown shape, within a size and a depth.
+- **No minimum for records**, only a maximum. Arrays have both.
+- **The details of a refusal are not typed on `NuiError`.** `error.details` is `unknown`, and the
+  declared type is read from the generated `NexusContract`. See [Refusals](bridge.md#refusals).
+- **Patterns are a subset of regular expressions**: no groups, alternatives, negated classes or
+  characters outside ASCII. See [Patterns](bridge.md#patterns).
+- **The server keeps no copy of a state.** A state set for everyone does not reach a player who
+  joins later: set it again for that player when they join.
+- **The props of a screen are checked in dev mode only**, in the page, and a mismatch is logged,
+  not refused.
+- **No limit across calls.** The rate limit is per player and per call. There is no budget for
+  a player's calls in total.
+- No binary payloads. Everything crosses as JSON.
+
+## The bridge
+
+- **A call cannot be cancelled** from the page. It ends with an answer or with the timeout.
+- **No streaming answers.** A call has one answer. Progress is a push.
+- **An empty Lua table reaches the page as `[]`**, also where the contract says object. See
+  [Where JSON and Lua differ](bridge.md#where-json-and-lua-differ).
+- No helpers for ESX, QBCore or Qbox. The runtimes are standalone, and a handler calls the
+  framework itself.
+
+## Apps in LB Phone and LB Tablet
+
+- **One screen per surface.** A resource has at most one phone app and one tablet app.
+- **An app has no props.** LB opens it and passes nothing along. It gets its data with a call
+  or a state.
+- **A tablet app starts again each time it is opened**, because LB Tablet removes the frame of
+  an app that is not in front.
+- **No notifications, no badge and no other LB feature.** `Nexus.app` registers the app and
+  carries the bridge. What else LB offers is reached through LB's own exports.
+- Only LB Phone and LB Tablet. No other phone or tablet resource is supported.
+
+## The dev server
+
+- **`nexus dev --game` needs the game on the same machine** as the dev server.
+- **The mock has no setting for latency or for failure.** A handler that should be slow awaits a
+  timer, and one that should fail returns `reject(...)`.
+- **One set of props per screen** in the mock. A second scenario is a `dev.action` button.
+- The mock does not simulate focus: in a browser every screen receives the mouse and the keyboard.
+
+## The command line
+
+- **The package is not on the npm registry.** It is installed from the file attached to a
+  GitHub release, and a resource is moved to a newer version by changing that address.
+- One template for `nexus create`.
+- `nexus build` has no watch mode. `nexus dev --game` is the way to iterate in game.
+
+## Testing
+
+- **Client Lua is not tested inside the game.** The Lua runtimes are tested in a real Lua 5.4
+  with the FiveM functions they use replaced by stand-ins, and the example is started on a real
+  server. Nothing drives a game client.
+- **Apps are tested in a frame that stands in for LB**, built from what LB's own page does with
+  a custom app, in Chromium 103. The suite does not run LB Phone or LB Tablet.

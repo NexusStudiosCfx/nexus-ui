@@ -1,0 +1,26 @@
+---
+import { signal, nui, NuiError } from 'nexus';
+
+const result = signal('');
+const stock = signal(0);
+
+async function buy(timeout?: number) {
+  try {
+    const answer = await nui.call('shop:buy', { item: 'water', amount: 2 }, { timeout });
+    result.value = `ok:${JSON.stringify(answer)}`;
+  } catch (error) {
+    const details = error instanceof NuiError && error.details !== undefined ? `:${JSON.stringify(error.details)}` : '';
+    result.value = error instanceof NuiError ? `failed:${error.code}:${error.message}${details}` : `threw:${String(error)}`;
+  }
+}
+
+nui.on('shop:stock', (data: { stock: number }) => (stock.value = data.stock));
+---
+
+<div id="bridge" class:busy={nui.pending('shop:buy')}>
+  <button id="buy" on:click={() => buy()}>Buy</button>
+  <button id="buy-fast" on:click={() => buy(50)}>Buy with a short timeout</button>
+  <button id="preview" on:click={() => nui.client('shop:preview', { item: 'water' })}>Preview</button>
+  <p id="result">{result}</p>
+  <p id="stock">{stock}</p>
+</div>

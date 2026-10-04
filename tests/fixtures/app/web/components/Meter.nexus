@@ -1,0 +1,9 @@
+---
+interface Props {
+  values: number[];
+}
+---
+
+{#each props.values as value, index}
+  <rect class="bar" x={index * 12} y={40 - value} width="10" height={value} />
+{/each}

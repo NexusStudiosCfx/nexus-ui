@@ -1,0 +1,17 @@
+---
+import { signal, nui } from 'nexus';
+
+const result = signal('');
+
+async function list() {
+  result.value = JSON.stringify(await nui.call('garage:list', { owner: 'me' }));
+}
+---
+
+<screen surface="tablet" cursor="default" />
+
+<main id="tablet-app">
+  <p id="tablet-state">{nui.state('garage').count ?? 'none'}</p>
+  <p id="tablet-result">{result}</p>
+  <button id="tablet-list" on:click={list}>List</button>
+</main>

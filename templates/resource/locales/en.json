@@ -1,0 +1,7 @@
+{
+  "main.title": "Hello from {{name}}",
+  "main.name": "Your name",
+  "main.send": "Send to the server",
+  "main.close": "Close",
+  "main.refused": "The server refused the call: %s"
+}

@@ -1,0 +1,56 @@
+---
+import { signal, onKey, after, every, sound, dev } from 'nexus';
+import { helper } from '../lib/dev-helper';
+
+const log = signal<string[]>([]);
+const clicks = signal(0);
+const ticks = signal(0);
+const typed = signal('');
+const note = (entry: string): void => void (log.value = [...log.value, entry]);
+
+onKey(' ', () => note('space'));
+onKey('Enter', () => note('enter'));
+onKey('ArrowDown', () => note('down'));
+onKey('s', (event) => note(event.ctrlKey ? 'ctrl+s' : 's'));
+
+interface Timers {
+  every: number;
+  after: string[];
+}
+const timers = ((window as unknown as { timers?: Timers }).timers ??= { every: 0, after: [] });
+
+every(20, () => {
+  ticks.value++;
+  timers.every++;
+});
+after(40, () => timers.after.push('soon'));
+after(100000, () => timers.after.push('never'));
+const cancel = after(40, () => timers.after.push('cancelled'));
+cancel();
+
+function later() {
+  after(30, () => timers.after.push('from a handler'));
+}
+
+sound.register({ chime: './silence.wav' });
+
+const greeting = helper('kept');
+dev.action('Only under nexus dev', () => helper('a build must not contain this'));
+---
+
+<screen focus="mouse keyboard" close="escape" />
+
+<div id="keys" tabindex="0" style="height: 300px; overflow: auto;">
+  <button id="target" on:click={() => clicks.value++}>Click</button>
+  <a id="link" href="#followed">Link</a>
+  <input id="field" bind:value={typed}>
+  <textarea id="area"></textarea>
+  <button id="later" on:click={later}>Later</button>
+  <button id="owned" on:click={() => sound.play('chime')}>Owned sound</button>
+  <button id="kept" on:click={() => sound.play('chime', { keep: true })}>Kept sound</button>
+  <p id="log">{log.value.join(',')}</p>
+  <p id="clicks">{clicks}</p>
+  <p id="ticks">{ticks}</p>
+  <p id="greeting">{greeting}</p>
+  <div style="height: 3000px"></div>
+</div>

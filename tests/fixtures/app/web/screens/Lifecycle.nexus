@@ -1,0 +1,73 @@
+---
+import { signal, effect, onMount, onCleanup, onKey, nui, sound, scale, t, env, dev } from 'nexus';
+
+interface Props {
+  label: string;
+  nested: { depth: number };
+}
+
+interface Probe {
+  events: string[];
+  ticks: number;
+}
+
+const probe = ((window as unknown as { probe?: Probe }).probe ??= { events: [], ticks: 0 });
+const record = (event: string): void => void probe.events.push(event);
+
+const keys = signal('');
+const pushes = signal(0);
+const typed = signal('');
+
+record('setup');
+effect(() => record(`effect:${props.label}`));
+onMount(() => {
+  record(document.querySelector('#lifecycle') ? 'mount:attached' : 'mount:detached');
+  const timer = setInterval(() => probe.ticks++, 10);
+  onCleanup(() => clearInterval(timer));
+});
+onCleanup(() => record('cleanup'));
+
+onKey('Enter', () => (keys.value += 'E'));
+onKey('x', () => (keys.value += 'x'));
+nui.on('ping', () => pushes.value++);
+
+sound.register({ hum: './silence.wav' });
+let stopHum: (() => void) | undefined;
+
+function hum() {
+  stopHum = sound.loop('hum', { volume: 0.5 });
+}
+
+async function humLater() {
+  await Promise.resolve();
+  sound.loop('hum');
+}
+
+function overwrite() {
+  try {
+    (props as { label: string }).label = 'overwritten';
+    record('write:accepted');
+  } catch {
+    record('write:refused');
+  }
+}
+
+dev.action('Never shown in a build', () => record('dev'));
+---
+
+<screen size="640x360" cursor="crosshair" />
+
+<div id="lifecycle">
+  <p id="label">{props.label}/{props.nested.depth}</p>
+  <p id="keys">{keys}</p>
+  <p id="pushes">{pushes}</p>
+  <p id="scale">{scale}</p>
+  <p id="env">{env.inGame}|{env.resource}|{env.dev}</p>
+  <p id="greeting">{t('greeting', 'Ada', 3)} / {t('menu.title')} / {t('missing.key')}</p>
+  <input id="field" bind:value={typed}>
+  <button id="hum" on:click={hum}>Hum</button>
+  <button id="hum-later" on:click={humLater}>Hum later</button>
+  <button id="hush" on:click={() => stopHum?.()}>Hush</button>
+  <button id="close" on:click={() => nui.close()}>Close</button>
+  <button id="overwrite" on:click={overwrite}>Overwrite a prop</button>
+</div>

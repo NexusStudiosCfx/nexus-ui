@@ -1,0 +1,3 @@
+<screen focus="mouse keyboard" close="none" />
+
+<div id="locked">A screen that Escape does not close</div>

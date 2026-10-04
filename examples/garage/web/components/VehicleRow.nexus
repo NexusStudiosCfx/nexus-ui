@@ -1,0 +1,94 @@
+---
+import { t } from 'nexus';
+import { money, type Vehicle } from '../lib/format';
+
+interface Props {
+  vehicle: Vehicle;
+  selected: boolean;
+  onPick: (model: string) => void;
+}
+---
+
+<li>
+  <button class="row" class:selected={props.selected} on:click={() => props.onPick(props.vehicle.model)}>
+    <span class="name">{props.vehicle.label}</span>
+    <span class="class">{t(`class.${props.vehicle.class}`)}</span>
+    {#if props.vehicle.owned}
+      <span class="owned">{t('garage.owned')}</span>
+    {:else}
+      <span class="price">{money(props.vehicle.price)}</span>
+    {/if}
+  </button>
+</li>
+
+<style>
+  li {
+    list-style: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 16px;
+    row-gap: 2px;
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    outline: none;
+    transition: background 120ms ease, border-color 120ms ease;
+  }
+
+  .row:hover {
+    background: #151518;
+  }
+
+  .row:focus-visible {
+    box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.3);
+  }
+
+  .row.selected {
+    background: rgba(200, 255, 61, 0.12);
+    border-color: rgba(200, 255, 61, 0.3);
+  }
+
+  .name {
+    font-size: 1.1em;
+    font-weight: 600;
+  }
+
+  .class {
+    grid-row: 2;
+    color: #71717a;
+    font-size: 0.85em;
+  }
+
+  .price,
+  .owned {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .price {
+    color: #a1a1aa;
+  }
+
+  .owned {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    font-size: 0.75em;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+</style>

@@ -1,0 +1,53 @@
+{
+  "name": "nexus-language",
+  "displayName": "Nexus UI",
+  "description": "Syntax highlighting and snippets for .nexus files.",
+  "version": "0.1.0",
+  "publisher": "nexus-studios",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Snippets"
+  ],
+  "keywords": [
+    "nexus",
+    "fivem",
+    "nui"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "nexus",
+        "aliases": [
+          "Nexus",
+          "nexus"
+        ],
+        "extensions": [
+          ".nexus"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "nexus",
+        "scopeName": "source.nexus",
+        "path": "./syntaxes/nexus.tmLanguage.json",
+        "embeddedLanguages": {
+          "source.ts": "typescript",
+          "source.css": "css",
+          "meta.embedded.expression.nexus": "typescript"
+        }
+      }
+    ],
+    "snippets": [
+      {
+        "language": "nexus",
+        "path": "./snippets/nexus.code-snippets"
+      }
+    ]
+  }
+}

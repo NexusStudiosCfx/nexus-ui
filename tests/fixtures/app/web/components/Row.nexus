@@ -1,0 +1,25 @@
+---
+import { onCleanup, onMount } from 'nexus';
+
+interface Props {
+  id: number;
+  label: string;
+  position: number;
+  onPick?: (id: number) => void;
+}
+
+const counters = (window as unknown as { rowCounters?: { created: number; mounted: number; removed: number } }).rowCounters ??= {
+  created: 0,
+  mounted: 0,
+  removed: 0,
+};
+
+counters.created++;
+onMount(() => counters.mounted++);
+onCleanup(() => counters.removed++);
+---
+
+<li class="row" data-id={props.id}>
+  <span class="label">{props.position}. {props.label}</span>
+  <button class="pick" on:click={() => props.onPick?.(props.id)}>Pick</button>
+</li>

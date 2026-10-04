@@ -1,0 +1,85 @@
+---
+import { signal, computed, store, onMount, type Signal } from 'nexus';
+import { tooltip } from '../lib/actions';
+
+interface Props {
+  title: string;
+  count: number;
+  extra?: Record<string, string>;
+}
+
+type Size = 'small' | 'large';
+
+const count = signal<number>(props.count);
+const doubled = computed(() => count.value * 2);
+const name = signal('Ada');
+const amount = signal<number | null>(3);
+const agreed = signal(false);
+const colour = signal('red');
+const picks = signal<string[]>(['b']);
+const size = signal('small' as Size);
+const form = store({ city: 'Paris' });
+const box: Signal<HTMLElement | null> = signal(null);
+const hint = signal('first hint');
+const width = signal(120);
+const log = signal<string[]>([]);
+const mounted = signal('no');
+
+function increment(): void {
+  count.value++;
+}
+
+function note(event: Event) {
+  log.value = [...log.value, (event.currentTarget as HTMLElement).id];
+}
+
+onMount(() => {
+  mounted.value = box.value!.isConnected ? 'yes' : 'detached';
+});
+---
+
+<screen focus="mouse keyboard" close="escape" />
+
+<main id="bindings" class="panel {size}" class:even={count.value % 2 === 0} style:width="{width}px" data-title={props.title} {...props.extra}>
+  <h1 id="title">{props.title}: {count} &amp; {doubled}&nbsp;!</h1>
+  <p id="plain">Plain &lt;text&gt; with {'{'}braces{'}'}</p>
+  <p id="mounted">{mounted}</p>
+
+  <button id="increment" on:click={increment} disabled={count.value >= 5}>Add</button>
+  <button id="inline" on:click={() => (count.value = 0)}>Reset</button>
+
+  <div id="outer" on:click={note}>
+    <button id="stopped" on:click|stop={note}>Stop</button>
+    <button id="bubbles" on:click={note}>Bubble</button>
+    <a id="prevented" href="#moved" on:click|prevent={note}>Link</a>
+    <button id="once" on:click|once|stop={note}>Once</button>
+    <span id="self" on:click|self|stop={note}><b id="inner">Inner</b></span>
+  </div>
+  <p id="log">{log.value.join(',')}</p>
+
+  <input id="name" bind:value={name}>
+  <input id="amount" type="number" bind:value={amount}>
+  <input id="agreed" type="checkbox" bind:checked={agreed}>
+  <input id="red" type="radio" value="red" bind:group={colour}>
+  <input id="blue" type="radio" value="blue" bind:group={colour}>
+  <input id="pick-a" type="checkbox" value="a" bind:group={picks}>
+  <input id="pick-b" type="checkbox" value="b" bind:group={picks}>
+  <select id="size" bind:value={size}>
+    <option value="small">Small</option>
+    <option value="large">Large</option>
+  </select>
+  <textarea id="city" bind:value={form.city}></textarea>
+  <p id="values">{name}|{amount}|{agreed}|{colour}|{picks.value.join('+')}|{size}|{form.city}</p>
+
+  <div id="box" bind:this={box} use:tooltip={hint}></div>
+  <button id="rehint" on:click={() => (hint.value = 'second hint')}>Hint</button>
+  <button id="widen" on:click={() => (width.value = 200)}>Widen</button>
+  <button id="grow" on:click={() => (size.value = 'large')}>Grow</button>
+</main>
+
+<style>
+  .panel { color: rgb(10, 20, 30); }
+  .panel.even { outline: 1px solid rgb(0, 128, 0); }
+  h1 { margin: 0; }
+  :global(body) { font-family: monospace; }
+</style>

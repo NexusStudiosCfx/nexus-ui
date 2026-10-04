@@ -1,0 +1,26 @@
+---
+import { signal } from 'nexus';
+import Card from '../components/Card.nexus';
+
+export type Group = { name: string; rows: string[] };
+export interface Props {
+  groups: Group[];
+}
+
+const picked = signal('');
+---
+
+<div id="nested">
+  {#each props.groups as group, index (index)}
+    <section class="group">
+      <h2>{index}:{group.name}</h2>
+      {#each group.rows as row, index (index)}
+        <button class="cell" on:click={() => (picked.value = `${group.name}/${row}/${index}`)}>{index}:{row}</button>
+      {/each}
+      <i class="after">{index}</i>
+    </section>
+  {/each}
+
+  <p id="para">Before <Card title="In a paragraph">inside</Card> after{#if props.groups.length}<div id="block">a block in a paragraph</div>{/if}</p>
+  <p id="nested-picked">{picked}</p>
+</div>

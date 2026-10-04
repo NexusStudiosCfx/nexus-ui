@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # The suite is developed on Windows, where most FiveM resources are built.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      # Tests that need FiveM's exact browser (Chromium 103) skip themselves when
+      # NEXUS_CHROMIUM_103 is not set.
+      - run: npm test
+      - run: npm run build

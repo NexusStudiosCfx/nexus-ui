@@ -1,0 +1,3 @@
+<screen focus="mouse keyboard" close="escape" />
+
+<div id="dialog">A second screen that Escape closes</div>

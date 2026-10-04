@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+web/dist/
+examples/*/nexus/
+tests/.tmp/
+releases/
+# The working design notes: the public docs are in docs/.
+SPEC.md
+
+# A lock file here would pin the path of a locally packed release.
+examples/*/package-lock.json

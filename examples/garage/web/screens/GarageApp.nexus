@@ -1,0 +1,287 @@
+---
+import { computed, nui, signal, t } from 'nexus';
+import { money, type Vehicle } from '../lib/format';
+import { useGarage } from '../lib/garage';
+
+// The same data and the same calls as the garage screen. Only what is around them differs:
+// LB Phone owns the frame, so there is no focus, no Escape and no size to declare.
+const garage = useGarage();
+const { vehicles, balance, status, failure } = garage;
+
+const tab = signal<'mine' | 'buy'>('mine');
+const notice = signal<{ done: boolean; text: string } | null>(null);
+const shown = computed(() => vehicles.value.filter((vehicle) => vehicle.owned === (tab.value === 'mine')));
+
+async function buy(vehicle: Vehicle) {
+  notice.value = await garage.buy(vehicle);
+}
+
+function show(next: 'mine' | 'buy') {
+  tab.value = next;
+  notice.value = null;
+}
+---
+
+<screen surface="phone" />
+
+<main class="app">
+  <header>
+    <h1>{t('garage.title')}</h1>
+    <div class="balance">
+      <span>{t('garage.balance')}</span>
+      <strong>{money(balance.value)}</strong>
+    </div>
+  </header>
+
+  <nav>
+    <button class:active={tab.value === 'mine'} on:click={() => show('mine')}>{t('app.mine')}</button>
+    <button class:active={tab.value === 'buy'} on:click={() => show('buy')}>{t('app.buy')}</button>
+  </nav>
+
+  {#if status.value === 'loading'}
+    <p class="state">{t('garage.loading')}</p>
+  {:else if status.value === 'failed'}
+    <div class="state">
+      <p>{t('garage.failed', failure.value)}</p>
+      <button class="retry" on:click={garage.load}>{t('garage.retry')}</button>
+    </div>
+  {:else}
+    <ul>
+      {#each shown as vehicle (vehicle.model)}
+        <li>
+          <div class="text">
+            <strong>{vehicle.label}</strong>
+            <span>{t(`class.${vehicle.class}`)}</span>
+          </div>
+          {#if vehicle.owned}
+            <span class="owned">{t('garage.owned')}</span>
+          {:else}
+            <button class="buy" disabled={nui.pending('garage:buy')} on:click={() => buy(vehicle)}>{money(vehicle.price)}</button>
+          {/if}
+        </li>
+      {:else}
+        <li class="none">{t('app.none')}</li>
+      {/each}
+    </ul>
+  {/if}
+
+  {#if notice.value}
+    <p class="notice" class:refused={!notice.value.done} transition:notice>{notice.value.text}</p>
+  {/if}
+</main>
+
+<style>
+  /* Sizes are in rem: LB sets the root font size from the size of the phone on screen. */
+  .app {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 3.2rem 1rem 1.6rem;
+    background: #09090b;
+    color: #f5f5f5;
+    font: 1rem/1.4 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 0.25rem;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .balance {
+    display: grid;
+    justify-items: end;
+    line-height: 1.2;
+  }
+
+  .balance span {
+    color: #71717a;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .balance strong {
+    font-size: 1.15rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem;
+    margin: 1.2rem 0 0.9rem;
+    padding: 0.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    background: #111113;
+  }
+
+  nav button {
+    padding: 0.55rem 0;
+    border: 0;
+    border-radius: 10px;
+    background: none;
+    color: #a1a1aa;
+    font: inherit;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+  }
+
+  nav button.active {
+    background: rgba(200, 255, 61, 0.12);
+    color: #c8ff3d;
+    font-weight: 600;
+  }
+
+  ul {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+  }
+
+  ul::-webkit-scrollbar {
+    display: none;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    background: #151518;
+    list-style: none;
+  }
+
+  .text {
+    display: grid;
+    min-width: 0;
+  }
+
+  .text strong {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .text span {
+    color: #71717a;
+    font-size: 0.8rem;
+  }
+
+  .buy {
+    flex: none;
+    padding: 0.5rem 0.9rem;
+    border: 0;
+    border-radius: 10px;
+    background: #c8ff3d;
+    color: #0b1400;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .buy:disabled {
+    opacity: 0.5;
+  }
+
+  .buy:focus-visible,
+  .retry:focus-visible,
+  nav button:focus-visible {
+    box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.3);
+  }
+
+  .owned {
+    flex: none;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  li.none {
+    justify-content: center;
+    padding: 2rem 1rem;
+    border-style: dashed;
+    background: none;
+    color: #71717a;
+  }
+
+  .state {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.8rem;
+    flex: 1;
+    margin: 0;
+    color: #71717a;
+    text-align: center;
+  }
+
+  .state p {
+    margin: 0;
+  }
+
+  .retry {
+    padding: 0.5rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: #1a1a1e;
+    color: #f5f5f5;
+    font: inherit;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .notice {
+    margin: 0.75rem 0 0;
+    padding: 0.7rem 0.9rem;
+    border-radius: 14px;
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    font-size: 0.9rem;
+  }
+
+  .notice.refused {
+    background: rgba(248, 113, 113, 0.12);
+    color: #f87171;
+  }
+
+  @keyframes notice-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.4rem);
+    }
+  }
+
+  .notice-enter {
+    animation: notice-in 160ms ease-out;
+  }
+</style>

@@ -1,0 +1,18 @@
+---
+interface Props {
+  title: string;
+  tone?: string;
+}
+---
+
+<article class="card" data-tone={props.tone ?? 'plain'}>
+  <header>
+    <slot name="header"><h2 class="fallback">{props.title}</h2></slot>
+  </header>
+  <div class="body"><slot /></div>
+  <footer><slot name="footer">No footer</slot></footer>
+</article>
+
+<style>
+  .card { border: 1px solid rgb(1, 2, 3); }
+</style>

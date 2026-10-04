@@ -1,0 +1,106 @@
+{
+  "Screen": {
+    "prefix": "screen",
+    "description": "A screen: a file in web/screens that Lua opens with Nexus.open",
+    "body": [
+      "---",
+      "import { nui } from 'nexus';",
+      "",
+      "interface Props {",
+      "  ${1:title}: ${2:string};",
+      "}",
+      "---",
+      "",
+      "<screen focus=\"${3|mouse keyboard,mouse,keyboard,none|}\" close=\"${4|escape,none|}\" size=\"${5:1920x1080}\" />",
+      "",
+      "<section class=\"${6:panel}\">",
+      "  <h1>{props.${1:title}}</h1>",
+      "  $0",
+      "  <button on:click={() => nui.close()}>Close</button>",
+      "</section>",
+      "",
+      "<style>",
+      "  .${6:panel} {",
+      "    position: absolute;",
+      "    inset: 0;",
+      "    margin: auto;",
+      "    width: 640px;",
+      "    height: 400px;",
+      "  }",
+      "</style>",
+      ""
+    ]
+  },
+  "HUD screen": {
+    "prefix": "hud",
+    "description": "A screen on the hud layer: no focus, fed by Nexus.set",
+    "body": [
+      "---",
+      "import { nui } from 'nexus';",
+      "",
+      "const ${1:hud} = nui.state('${1:hud}');",
+      "---",
+      "",
+      "<screen layer=\"hud\" size=\"${2:1920x1080}\" />",
+      "",
+      "<div class=\"${3:hud}\">",
+      "  $0",
+      "</div>",
+      "",
+      "<style>",
+      "  .${3:hud} {",
+      "    position: absolute;",
+      "    left: 32px;",
+      "    bottom: 32px;",
+      "  }",
+      "</style>",
+      ""
+    ]
+  },
+  "Component": {
+    "prefix": "component",
+    "description": "A component with typed props",
+    "body": [
+      "---",
+      "interface Props {",
+      "  ${1:label}: ${2:string};",
+      "}",
+      "---",
+      "",
+      "<${3:div} class=\"${4:root}\">",
+      "  ${0:{props.${1:label}\\}}",
+      "</${3:div}>",
+      "",
+      "<style>",
+      "  .${4:root} {",
+      "  }",
+      "</style>",
+      ""
+    ]
+  },
+  "If block": {
+    "prefix": "#if",
+    "description": "{#if} ... {/if}",
+    "body": ["{#if ${1:condition}}", "  $0", "{/if}"]
+  },
+  "If else block": {
+    "prefix": "#ifelse",
+    "description": "{#if} ... {:else} ... {/if}",
+    "body": ["{#if ${1:condition}}", "  $2", "{:else}", "  $0", "{/if}"]
+  },
+  "Each block": {
+    "prefix": "#each",
+    "description": "{#each} with a key, so that nodes are moved instead of recreated",
+    "body": ["{#each ${1:items} as ${2:item} (${2:item}.${3:id})}", "  $0", "{/each}"]
+  },
+  "Key block": {
+    "prefix": "#key",
+    "description": "{#key} recreates its content when the value changes",
+    "body": ["{#key ${1:value}}", "  $0", "{/key}"]
+  },
+  "Call": {
+    "prefix": "call",
+    "description": "A call to the server, declared in web/contract.ts",
+    "body": ["const ${1:result} = await nui.call('${2:name}', ${3:{\\}});"]
+  }
+}

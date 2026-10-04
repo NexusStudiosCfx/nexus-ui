@@ -1,0 +1,78 @@
+---
+import { signal, computed, effect, batch, untrack, store, mount } from 'nexus';
+import Badge from '../components/Badge.nexus';
+
+const state = store({
+  player: { name: 'Ada', level: 1 },
+  items: ['rope'] as string[],
+  flags: {} as Record<string, boolean>,
+});
+
+const first = signal(1);
+const second = signal(10);
+const sum = computed(() => first.value + second.value);
+const runs = signal(0);
+const untracked = signal(0);
+const slot = signal<HTMLElement | null>(null);
+let unmount: (() => void) | undefined;
+
+effect(() => {
+  sum.value;
+  untrack(() => runs.value++);
+});
+
+effect(() => {
+  first.value;
+  untracked.value = untrack(() => second.value);
+});
+
+function both() {
+  batch(() => {
+    first.value++;
+    second.value++;
+  });
+}
+
+async function later() {
+  await Promise.resolve();
+  first.value++;
+  second.value++;
+}
+
+function toggleBadge() {
+  if (unmount) {
+    unmount();
+    unmount = undefined;
+  } else {
+    unmount = mount(Badge, slot.value!, { label: 'mounted by hand' });
+  }
+}
+---
+
+<screen focus="mouse" close="none" />
+
+<div id="state">
+  <p id="player">{state.player.name} is level {state.player.level}</p>
+  <p id="items">{state.items.length}: {state.items.join(', ')}</p>
+  <ul id="list">
+    {#each state.items as item}<li>{item}</li>{/each}
+  </ul>
+  <p id="flags">{Object.keys(state.flags).join(',')}</p>
+  <p id="sum">{sum} after {runs} runs, untracked {untracked}</p>
+
+  <button id="level" on:click={() => state.player.level++}>Level</button>
+  <button id="rename" on:click={() => (state.player = { name: 'Grace', level: 9 })}>Rename</button>
+  <button id="push" on:click={() => state.items.push('torch', 'map')}>Push</button>
+  <button id="sort" on:click={() => state.items.sort()}>Sort</button>
+  <button id="splice" on:click={() => state.items.splice(0, 1)}>Splice</button>
+  <button id="clear" on:click={() => (state.items.length = 0)}>Clear</button>
+  <button id="flag" on:click={() => (state.flags.night = true)}>Flag</button>
+  <button id="unflag" on:click={() => delete state.flags.night}>Unflag</button>
+  <button id="both" on:click={both}>Both</button>
+  <button id="handler" on:click={() => { first.value++; second.value++; }}>In a handler</button>
+  <button id="later" on:click={later}>After an await</button>
+  <button id="other" on:click={() => second.value++}>Second only</button>
+
+  <div id="slot" bind:this={slot}></div>
+  <button id="badge" on:click={toggleBadge}>Badge</button>
+</div>

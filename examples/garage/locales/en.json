@@ -1,0 +1,46 @@
+{
+  "garage.title": "Garage",
+  "garage.balance": "Balance",
+  "garage.search": "Search by name",
+  "garage.all": "All",
+  "garage.empty": "No vehicle matches.",
+  "garage.loading": "Loading the catalogue",
+  "garage.failed": "The catalogue could not be loaded (%s).",
+  "garage.retry": "Try again",
+  "garage.owned": "Owned",
+  "garage.price": "Price",
+  "garage.buy": "Buy for %s",
+  "garage.buying": "Buying",
+  "garage.in_garage": "In your garage",
+  "garage.short": "You are %s short",
+  "garage.bought": "%s is now in your garage.",
+  "garage.close": "Close",
+  "garage.pick": "Pick a vehicle on the left.",
+
+  "app.mine": "My vehicles",
+  "app.buy": "Buy",
+  "app.none": "Nothing here yet.",
+  "app.name": "Garage",
+  "app.description": "Buy vehicles and see the ones you own",
+
+  "stat.speed": "Top speed",
+  "stat.acceleration": "Acceleration",
+  "stat.handling": "Handling",
+
+  "class.compact": "Compact",
+  "class.motorcycle": "Motorcycle",
+  "class.sports": "Sports",
+  "class.super": "Super",
+  "class.suv": "SUV",
+
+  "error.not_enough_money": "You cannot afford this vehicle.",
+  "error.already_owned": "You already own this vehicle.",
+  "error.unknown_vehicle": "This vehicle is no longer for sale.",
+  "error.rate_limited": "Slow down a little.",
+  "error.timeout": "The server did not answer in time.",
+  "error.other": "The purchase failed (%s).",
+
+  "hud.fuel": "Fuel",
+  "hud.engine": "Engine",
+  "hud.unit": "km/h"
+}

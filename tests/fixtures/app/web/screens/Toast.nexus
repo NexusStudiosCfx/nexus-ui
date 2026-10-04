@@ -1,0 +1,3 @@
+<screen focus="none" />
+
+<div id="toast">An overlay that takes no focus</div>

@@ -1,0 +1,115 @@
+---
+import { signal, nui, t, NuiError } from 'nexus';
+
+interface Props {
+  name: string;
+}
+
+const name = signal(props.name);
+const reply = signal('');
+
+async function send() {
+  try {
+    const result = await nui.call('greet', { name: name.value });
+    reply.value = result.message;
+  } catch (error) {
+    reply.value = t('main.refused', error instanceof NuiError ? error.code : String(error));
+  }
+}
+---
+
+<screen focus="mouse keyboard" close="escape" size="1920x1080" />
+
+<section class="panel">
+  <h1>{t('main.title')}</h1>
+
+  <label>
+    <span>{t('main.name')}</span>
+    <input bind:value={name} maxlength="24">
+  </label>
+
+  <button on:click={send} disabled={nui.pending('greet')}>{t('main.send')}</button>
+
+  {#if reply}
+    <p class="reply">{reply}</p>
+  {/if}
+
+  <button class="quiet" on:click={() => nui.close()}>{t('main.close')}</button>
+</section>
+
+<style>
+  .panel {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 520px;
+    transform: translate(-50%, -50%);
+    display: grid;
+    gap: 16px;
+    padding: 32px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px;
+    background: #111113;
+    color: #f5f5f5;
+    font: 16px/1.4 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  label {
+    display: grid;
+    gap: 6px;
+    color: #71717a;
+    font-size: 14px;
+  }
+
+  input,
+  button {
+    padding: 11px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    font: inherit;
+    color: inherit;
+    background: #1a1a1e;
+    outline: none;
+  }
+
+  input:focus,
+  button:focus-visible {
+    border-color: #c8ff3d;
+    box-shadow: 0 0 0 3px rgba(200, 255, 61, 0.3);
+  }
+
+  button {
+    cursor: pointer;
+    border-color: transparent;
+    background: #c8ff3d;
+    color: #0b1400;
+    font-weight: 600;
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  button.quiet {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: #1a1a1e;
+    color: #a1a1aa;
+    font-weight: 400;
+  }
+
+  .reply {
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    background: #151518;
+    color: #a1a1aa;
+  }
+</style>

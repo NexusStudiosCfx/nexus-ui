@@ -1,0 +1,45 @@
+---
+import { signal } from 'nexus';
+
+const shown = signal(true);
+const slid = signal(false);
+const rows = signal([1, 2, 3]);
+---
+
+<screen focus="mouse" close="none" />
+
+<section id="motion" transition:screen>
+  <button id="toggle" on:click={() => (shown.value = !shown.value)}>Toggle</button>
+  {#if shown}
+    <div id="fade" transition:fade>Fades</div>
+  {/if}
+
+  <button id="slide-toggle" on:click={() => (slid.value = !slid.value)}>Slide</button>
+  {#if slid}
+    <div id="slide" class="slide" transition:slide>Slides</div>
+  {/if}
+
+  <button id="drop" on:click={() => (rows.value = rows.value.slice(1))}>Drop</button>
+  <ul id="rows">
+    {#each rows as row (row)}
+      <li class="row" transition:fade>{row}</li>
+    {/each}
+  </ul>
+</section>
+
+<style>
+  @keyframes appear {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes vanish {
+    to { opacity: 0; }
+  }
+  .fade-enter { animation: appear 150ms linear; }
+  .fade-leave { animation: 150ms linear vanish forwards; }
+
+  .slide { transition: transform 150ms linear; }
+  .slide-enter, .slide-leave { transform: translateX(-100px); }
+
+  .screen-leave { animation: vanish 150ms linear forwards; }
+</style>
