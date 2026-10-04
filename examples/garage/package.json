@@ -9,7 +9,7 @@
     "check": "nexus check"
   },
   "devDependencies": {
-    "nexus-ui": "https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.0/nexus-ui-0.2.0.tgz",
+    "nexus-ui": "https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.1/nexus-ui-0.2.1.tgz",
     "typescript": "~6.0.0",
     "vite": "^8.3.2"
   }

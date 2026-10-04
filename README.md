@@ -90,7 +90,7 @@ Nexus UI takes those on as the framework's job.
 ## Start
 
 ```
-npx --package https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.0/nexus-ui-0.2.0.tgz nexus create my_shop
+npx --package https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.1/nexus-ui-0.2.1.tgz nexus create my_shop
 cd my_shop
 npm install
 npm run dev
@@ -112,6 +112,7 @@ Requirements: Node.js 20 or newer, and `lua54 'yes'` in the resource.
 - [The bridge](docs/bridge.md): the contract, the Lua API, the security model, the wire format.
 - [The command line](docs/cli.md): `create`, `dev`, `build`, `check`.
 - [Roadmap](docs/roadmap.md): what version 0.2 does not do.
+- [Changelog](CHANGELOG.md): what changed in each release.
 
 `examples/garage` is a complete resource: a garage menu with a list, a search and a purchase the
 server can refuse, a vehicle HUD, the same garage as an app in LB Phone, sounds and two

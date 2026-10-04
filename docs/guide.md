@@ -34,7 +34,7 @@ Contents:
 ## 2. Create a resource
 
 ```
-npx --package https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.0/nexus-ui-0.2.0.tgz nexus create my_shop
+npx --package https://github.com/NexusStudiosCfx/nexus-ui/releases/download/v0.2.1/nexus-ui-0.2.1.tgz nexus create my_shop
 cd my_shop
 npm install
 ```
@@ -471,9 +471,9 @@ The file also works from disk, for a machine without access to GitHub or a build
 Download it, then:
 
 ```
-npx --package ./nexus-ui-0.2.0.tgz nexus create my_shop
+npx --package ./nexus-ui-0.2.1.tgz nexus create my_shop
 cd my_shop
-npm install --save-dev ../nexus-ui-0.2.0.tgz
+npm install --save-dev ../nexus-ui-0.2.1.tgz
 ```
 
 The last line installs everything the resource needs and points its `nexus-ui` dependency at the
@@ -512,7 +512,7 @@ npm run build
 To build it against the file you packed from the clone instead, install that over it:
 
 ```
-npm install --no-save ../../releases/nexus-ui-0.2.0.tgz
+npm install --no-save ../../releases/nexus-ui-0.2.1.tgz
 ```
 
 ## 14. When something goes wrong
