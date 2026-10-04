@@ -477,7 +477,7 @@ player types goes into the field that was clicked. Escape gives the game back.
 What changes for a world screen:
 
 - Lua creates a display of it instead of opening it. `Nexus.open` refuses its name.
-- It is one browser per display, so a resource has two at a time unless the server raises
+- It is one browser per display, so a resource has four at a time unless the server raises
   `nexus_world_limit`, and `Nexus.world` returns `nil` and a reason instead of a display when
   there can be none. Fall back to an ordinary screen then.
 - The browser never has the game's focus. A field that was clicked takes what is typed, yet

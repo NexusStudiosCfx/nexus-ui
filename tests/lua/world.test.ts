@@ -115,20 +115,23 @@ describe('world screens in lua/client.lua', () => {
   });
 
   describe('the limits', () => {
-    it('returns nil and limit at the cap, which is 2 unless the convar says otherwise', async () => {
+    it('returns nil and limit at the cap, which is 4 unless the convar says otherwise', async () => {
       await lua.run(CLOCK);
       await lua.run(TERMINAL);
+      const another = (txd: string): string => `local display, problem = Nexus.world('clock', { txd = '${txd}', texture = 'face' }) return tostring(display) .. ' ' .. tostring(problem)`;
+      expect(await lua.run(another('prop_third'))).not.toBe('nil limit');
+      expect(await lua.run(another('prop_fourth'))).not.toBe('nil limit');
       await lua.drain();
-      const third = `local display, problem = Nexus.world('clock', { txd = 'prop_other', texture = 'face' }) return tostring(display) .. ' ' .. tostring(problem)`;
-      expect(await lua.run(third)).toBe('nil limit');
+      expect(await lua.run(another('prop_fifth'))).toBe('nil limit');
       expect(await lua.drain()).toEqual([]);
 
-      await lua.convar('nexus_world_limit', 3);
-      expect(await lua.run(third)).not.toBe('nil limit');
+      await lua.convar('nexus_world_limit', 5);
+      expect(await lua.run(another('prop_fifth'))).not.toBe('nil limit');
       expect(of(await lua.drain(), 'createDui')).toHaveLength(1);
     });
 
     it('frees a place when a display is destroyed', async () => {
+      await lua.convar('nexus_world_limit', 2);
       await lua.run(CLOCK);
       await lua.run(TERMINAL);
       await lua.run('clock:destroy()');

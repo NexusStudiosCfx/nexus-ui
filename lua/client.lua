@@ -38,7 +38,7 @@ local LB = { phone = 'lb-phone', tablet = 'lb-tablet' }
 
 -- How many displays a resource may have at once unless the convar nexus_world_limit says
 -- otherwise. Each is a browser, and a browser costs memory and a share of every frame.
-local WORLD_LIMIT = 2
+local WORLD_LIMIT = 4
 -- What one line of the wheel is to a browser: a notch is three lines and 120 units.
 local WHEEL_LINE = 40
 local CAMERA_EASE = 400
@@ -487,7 +487,7 @@ end
 ---
 --- Returns `nil, reason` when there can be no display: 'unavailable' when the game has no
 --- browser to draw with, 'limit' when the resource has as many displays as the convar
---- nexus_world_limit allows (2 unless set), 'taken' when a display already draws on that
+--- nexus_world_limit allows (4 unless set), 'taken' when a display already draws on that
 --- texture.
 ---
 ---     local display, problem = Nexus.world('clock', { txd = 'my_clock', texture = 'my_clock_face', props = { business = 'police' } })

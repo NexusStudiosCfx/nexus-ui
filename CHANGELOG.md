@@ -9,7 +9,7 @@ World screens: a screen drawn on a prop in the game world.
   any number of them, from the same build as its page and its apps.
 - **`Nexus.world(name, { txd, texture, props })`** in client Lua creates a display of it and
   returns it, or `nil` and `'unavailable'`, `'limit'` or `'taken'`. `display:set(props)`,
-  `display:destroy()` and `display:alive()` manage it. A resource has two displays at a time
+  `display:destroy()` and `display:alive()` manage it. A resource has four displays at a time
   unless the convar `nexus_world_limit` says otherwise, and all of them are destroyed when it
   stops.
 - **Input.** `display:pointer`, `press`, `release`, `scroll`, `type` and `key` drive a display

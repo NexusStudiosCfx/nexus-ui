@@ -503,8 +503,8 @@ end
 
 - **A display is a browser.** Nothing is created until `Nexus.world` is called, and each display
   costs memory and a share of every frame for as long as it exists. Create one for a player who
-  is close enough to see it, and destroy it when they leave. A resource has at most 2 displays at
-  a time. `setr nexus_world_limit 4` in the server configuration raises that for every resource.
+  is close enough to see it, and destroy it when they leave. A resource has at most 4 displays at
+  a time. `setr nexus_world_limit 6` in the server configuration raises that for every resource.
 - **The model has to be loaded.** FiveM replaces a texture only if it finds it at that moment, so
   call `Nexus.world` once the prop exists. A replacement does not outlive its model being
   unloaded either: a display that is kept while the player is far away may come back showing the

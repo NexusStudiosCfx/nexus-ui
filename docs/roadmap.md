@@ -81,8 +81,8 @@ code: a feature is either in and documented, or it is on this page.
 - **FiveM marks texture replacement as experimental.** The reference says of `AddReplaceTexture`
   that it is not for a live environment. It is what every screen on a prop is built on.
 - **A browser per display.** Each costs memory and a share of every frame. A resource has at
-  most 2 at a time unless `nexus_world_limit` says otherwise, and the limit is counted per
-  resource: two resources with two displays each are four browsers.
+  most 4 at a time unless `nexus_world_limit` says otherwise, and the limit is counted per
+  resource: two resources with four displays each are eight browsers.
 - **Memory is not given back.** FiveM has no native that releases the texture a display drew on,
   so every display that was ever created leaves one behind until the game closes. Create a
   display when a player arrives and keep it while they are near. Do not create one per glance.
