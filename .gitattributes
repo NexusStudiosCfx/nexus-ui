@@ -1,0 +1,4 @@
+# The tests compare generated files and templates byte for byte, so every checkout uses LF.
+* text=auto eol=lf
+*.png binary
+*.wav binary
