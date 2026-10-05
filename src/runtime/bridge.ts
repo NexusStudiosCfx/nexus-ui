@@ -38,7 +38,8 @@
  * Page to Lua: `{ t: 'ready' }`, `{ t: 'call', id, name, data }`, `{ t: 'client', name, data }`,
  * `{ t: 'close', screen? }`, each with `surface: 'phone' | 'tablet'` when sent by an app.
  * Lua to page, always with `__nexus: 1`: `{ t: 'open', screen, props }`, `{ t: 'close', screen }`,
- * `{ t: 'push', name, data }`, `{ t: 'state', name, data }` (the changed keys),
+ * `{ t: 'push', name, data }`, `{ t: 'state', name, data, removed }` (the changed keys and the
+ * keys that are gone),
  * `{ t: 'locale', data }`, `{ t: 'res', id, ok: true, data }` and
  * `{ t: 'res', id, ok: false, code, message?, details? }`.
  */
@@ -110,6 +111,7 @@ interface WireMessage {
   props?: Record<string, unknown>;
   name?: string;
   data?: unknown;
+  removed?: string[];
   id?: number;
   ok?: boolean;
   code?: string;
@@ -186,7 +188,11 @@ function receive(received: WireMessage | null): void {
       openScreen(message.screen as string, message.props);
     } else if (t === 'close') closeScreen(message.screen as string);
     else if (t === 'locale') locale.value = data as typeof locale.value;
-    else if (t === 'state') patch(state(name), data as Record<string, unknown>, true);
+    else if (t === 'state') {
+      const current = state(name);
+      patch(current, (data || {}) as Record<string, unknown>, true);
+      for (const key of message.removed || []) delete current[key];
+    }
     else if (t === 'res') settle(message.id as number, message.ok ? undefined : new NuiError(message.code || 'rejected', message.message, message.details), data);
     else if (t === 'push') for (const listener of [...(listeners.get(name) || [])]) listener(data);
     else if (world) void world().then((module) => module.receive(message, post));

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- **`Nexus.unset` reaches the page.** Lua sent the removed keys, and the page ignored them, so a
+  key that was unset kept its last value in the page until something set it again. It reads as
+  undefined again now, for a state unset on its own and for one unset next to changed keys. The
+  same held under `nexus dev` for `unset` in a mock.
+
 ## 0.3.0
 
 World screens: a screen drawn on a prop in the game world.

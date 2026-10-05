@@ -121,6 +121,19 @@ describe.skipIf(!CHROMIUM_103)('screens in Chromium 103', () => {
     expect(await text('#place')).toBe('Vinewood');
   });
 
+  test('a key that Lua removed reads as undefined again, alone or next to changed keys', async () => {
+    await fixture.lua({ t: 'state', name: 'hud', data: { health: 80, cash: 250 } });
+    await fixture.open('hud');
+    expect(await text('#cash')).toBe('250');
+    await fixture.lua({ t: 'state', name: 'hud', removed: ['cash'] });
+    expect(await text('#cash')).toBe('0');
+    expect(await text('#health')).toBe('80');
+    await fixture.lua({ t: 'state', name: 'hud', data: { cash: 90, place: { street: 'Grove' } } });
+    await fixture.lua({ t: 'state', name: 'hud', data: { health: 60 }, removed: ['place', 'never_set'] });
+    expect([await text('#health'), await text('#cash')]).toEqual(['60', '90']);
+    expect(await text('#place')).toBe('nowhere');
+  });
+
   test('Escape asks Lua to close the screen that declares it', async () => {
     const { page } = fixture;
     await page.keyboard.press('Escape');

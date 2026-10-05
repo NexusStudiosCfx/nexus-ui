@@ -552,9 +552,9 @@ file npm serves. It is there for a machine without access to the registry, and f
 your own. Download it, then:
 
 ```
-npx --package ./nexusstudios-ui-0.3.0.tgz nexus create my_shop
+npx --package ./nexusstudios-ui-0.3.1.tgz nexus create my_shop
 cd my_shop
-npm install --save-dev ../nexusstudios-ui-0.3.0.tgz
+npm install --save-dev ../nexusstudios-ui-0.3.1.tgz
 ```
 
 The last line installs everything the resource needs and points its `@nexusstudios/ui` dependency at the
@@ -594,7 +594,7 @@ npm run build
 To build it against the file you packed from the clone instead, install that over it:
 
 ```
-npm install --no-save ../../releases/nexusstudios-ui-0.3.0.tgz
+npm install --no-save ../../releases/nexusstudios-ui-0.3.1.tgz
 ```
 
 ## 15. When something goes wrong
